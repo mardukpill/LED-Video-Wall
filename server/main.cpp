@@ -21,7 +21,7 @@ int main() {
 
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(1024);
+    addr.sin_port = htons(7070);
     addr.sin_addr.s_addr = INADDR_ANY;
 
     int res = bind(server_socket, (struct sockaddr *)&addr, sizeof(addr));
@@ -34,12 +34,14 @@ int main() {
 
     int client_socket = accept(server_socket, NULL, NULL);
 
-    // std::string msg = "This is a test!!!";
-    // send(client_socket, msg.c_str(), msg.size(), 0);
     char buf[256];
     recv(client_socket, buf, 256, 0);
     buf[255] = '\0';
     printf(buf, "%s");
+    while (true) {
+        std::string msg = "This is a test!!!";
+        send(client_socket, msg.c_str(), msg.size(), 0);
+    }
 
     close(server_socket);
 }
