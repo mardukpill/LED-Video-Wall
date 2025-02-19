@@ -3,7 +3,7 @@ CXX:=g++
 CPPFLAGS:=
 CXXFLAGS:=-O0 -g -Wall
 LDFLAGS:=
-SOURCES:=main
+SOURCES:=main tcp
 OBJ_DIR:=obj
 
 # Variables
