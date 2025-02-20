@@ -1,9 +1,9 @@
 # Config
 CXX:=g++
 CPPFLAGS:=
-CXXFLAGS:=-O0 -g -Wall
-LDFLAGS:=
-SOURCES:=main tcp
+CXXFLAGS:=-O0 -g -Wall -std=c++17
+LDFLAGS:=-lyaml-cpp
+SOURCES:=main tcp client config-parser
 OBJ_DIR:=obj
 
 # Variables
@@ -14,7 +14,7 @@ OBJ_FILES:=$(foreach src, $(SOURCES), $(OBJ_DIR)/$(src).o)
 all: led-wall-server
 
 led-wall-server: $(OBJ_FILES)
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CXX) $^ -o $@ $(LDFLAGS)
 
 $(OBJ_FILES): $(OBJ_DIR)/%.o: %.cpp obj
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@

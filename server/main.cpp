@@ -8,8 +8,14 @@
 #include <netdb.h>
 #include <unistd.h> // for close
 #include "tcp.hpp"
+#include "client.hpp"
+#include "config-parser.hpp"
 
 int main() {
+    parse_config("config.yaml");
+}
+
+void start_server() {
     int server_socket = create_server_socket(INADDR_ANY, 7070);
 
     listen(server_socket, 1);
