@@ -1,0 +1,5 @@
+# https://developer.espressif.com/blog/espressif-ide-lsp-support/#clangd-configuration
+CompileFlags:
+  # Remove: [-m*, -f*]
+  Remove: ["-fno-tree-switch-conversion", "-fstrict-volatile-bitfields", "-mlongcalls"]
+
