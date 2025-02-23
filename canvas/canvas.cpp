@@ -38,7 +38,7 @@ void VirtualCanvas::addElementToCanvas(const Element& element) {
     cv::Size elemSize = element.getDimensions();
 
 
-    //Overwite a region of interest with the image
+    //Overwite a region of interest with the image - FIX IN FUTURE TO ACCOUNT FOR BOUNDARIES
     elemMat.copyTo(pixelMatrix(cv::Rect(loc, elemSize)));
 
     //Store the element in the list

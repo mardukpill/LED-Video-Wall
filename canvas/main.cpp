@@ -5,7 +5,7 @@ int main() {
     //Create a virtual canvas
     VirtualCanvas vCanvas(cv::Size(3000, 3000));
 
-    //Create elements
+    //Create elements (filepath, id, location)
     Element elem1("img.jpg", 1, cv::Point(100, 100));
     Element elem2("img2.jpg", 2, cv::Point(500, 700));
 
