@@ -6,7 +6,36 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <regex>
 
+std::regex mac_48_regex(
+    "^[\\dA-F][\\dA-F](([\\dA-F][\\dA-F]){5}|([\\dA-F][\\dA-F]){5})$");
+
+uint8_t parse_hex(char c) {
+    if (c <= '9') {
+        return c - '0';
+    } else {
+        return c - 'A' + 10;
+    }
+}
+
+uint64_t parse_mac_addr_48_bit(std::string str) {
+    std::smatch match;
+    std::regex_search(str, match, mac_48_regex);
+    if (match.empty()) {
+        //todo error
+    }
+    uint64_t res = 0;
+    for (int i = 0; i < 6; ++i) {
+        int offset = i * 3;
+        res <<= 4;
+        res += parse_hex(str[offset]);
+        res <<= 4;
+        res += parse_hex(str[offset + 1]);
+    }
+
+    return res;
+}
 
 void parse_config(std::string file) {
     YAML::Node config = YAML::LoadFile(file);
@@ -42,7 +71,7 @@ void parse_config(std::string file) {
     // Parse Clients
     std::vector<Client> clients;
     for (YAML::const_iterator it=y_clients.begin(); it!=y_clients.end(); ++it) {
-        std::string mac_addr = it->first.as<std::string>();
+        uint64_t mac_addr = parse_mac_addr_48_bit(it->first.as<std::string>());
 
         YAML::Node connections_node = it->second["matrix-connections"];
 
@@ -61,8 +90,7 @@ void parse_config(std::string file) {
             mat_connections.push_back(conn);
         }
 
-        //todo parse mac address
-        Client c(123, -1, mat_connections);
+        Client c(mac_addr, -1, mat_connections);
         std::cout << c.to_string() << "\n";
         clients.push_back(c);
     }

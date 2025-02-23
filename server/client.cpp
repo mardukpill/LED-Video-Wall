@@ -3,8 +3,8 @@
 #include <regex>
 #include <optional>
 #include <string>
+#include <ios>
 
-std::regex mac_regex("^[\\dA-F][\\dA-F](([\\dA-F][\\dA-F]){5}|([\\dA-F][\\dA-F]){7})$");
 std::regex rot_regex("^(up|down|left|right)$");
 
 rotation parse_rotation(std::string str) {
@@ -54,5 +54,9 @@ Client::Client(uint64_t mac_addr,
 {}
 
 std::string Client::to_string() {
-    return std::to_string(this->mac_addr) + ", " + std::to_string(this->socket);
+    std::stringstream ss;
+    ss << "Client[";
+    ss << "mac-addr: " << std::hex << this->mac_addr << ", ";
+    ss << "socket: " << std::to_string(this->socket) << "]";
+    return ss.str();
 }
