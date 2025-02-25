@@ -37,23 +37,34 @@ uint64_t parse_mac_addr_48_bit(std::string str) {
     return res;
 }
 
-void parse_config(std::string file) {
+std::vector<Client> parse_config(std::string file) {
     YAML::Node config = YAML::LoadFile(file);
 
-    YAML::Node y_clients = config["clients"];
-    YAML::Node y_matrices = config["matrices"];
-    YAML::Node y_matrix_specs = config["matrix-specs"];
+    YAML::Node ynode_clients = config["clients"];
+    YAML::Node ynode_matrices = config["matrices"];
+    YAML::Node ynode_matrix_specs = config["matrix-specs"];
+
+    // Parse Matrix Specifications
+    std::map<std::string, LEDMatrixSpec*> matrix_specs;
+    for (YAML::const_iterator it=ynode_matrix_specs.begin(); it!=ynode_matrix_specs.end(); ++it) {
+        std::string id = it->first.as<std::string>();
+        YAML::Node spec_node = it->second;
+
+        float power_limit = spec_node["power_limit_amps"].as<float>();
+        uint32_t width = spec_node["width-height"][0].as<uint32_t>();
+        uint32_t height = spec_node["width-height"][0].as<uint32_t>();
+
+        matrix_specs[id] = new LEDMatrixSpec(id, power_limit, width, height);
+    }
 
     // Parse Matrices
     std::map<std::string, LEDMatrix*> matrices;
     // std::vector<LEDMatrix> matrices;
-    for (YAML::const_iterator it=y_matrices.begin(); it!=y_matrices.end(); ++it) {
+    for (YAML::const_iterator it=ynode_matrices.begin(); it!=ynode_matrices.end(); ++it) {
         std::string id = it->first.as<std::string>();
         YAML::Node matrix_node = it->second;
 
-        std::string spec = matrix_node["spec"].as<std::string>();
-
-        std::uint64_t num_leds = 0; //todo: calc leds from specs
+        std::string spec_id = matrix_node["spec"].as<std::string>();
         
         YAML::Node pos_node = matrix_node["pos"];
         if (pos_node.size() != 2) {
@@ -63,14 +74,14 @@ void parse_config(std::string file) {
         CanvasPos pos = CanvasPos(pos_node[0].as<int>(),
                                   pos_node[1].as<int>(),
                                   rot);
-        LEDMatrix* mat = new LEDMatrix(id, spec, num_leds, pos);
-        std::cout << mat->to_string() << "\n";
+        LEDMatrixSpec* mat_spec = matrix_specs[spec_id];
+        LEDMatrix* mat = new LEDMatrix(id, mat_spec, pos);
         matrices[id] = mat;
     }
 
     // Parse Clients
     std::vector<Client> clients;
-    for (YAML::const_iterator it=y_clients.begin(); it!=y_clients.end(); ++it) {
+    for (YAML::const_iterator it=ynode_clients.begin(); it!=ynode_clients.end(); ++it) {
         uint64_t mac_addr = parse_mac_addr_48_bit(it->first.as<std::string>());
 
         YAML::Node connections_node = it->second["matrix-connections"];
@@ -91,7 +102,8 @@ void parse_config(std::string file) {
         }
 
         Client c(mac_addr, -1, mat_connections);
-        std::cout << c.to_string() << "\n";
         clients.push_back(c);
     }
+
+    return clients;
 }

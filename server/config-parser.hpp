@@ -2,7 +2,9 @@
 #define CONFIG_PARSER_HPP
 
 #include <string>
+#include <vector>
+#include "client.hpp"
 
-void parse_config(std::string file);
+std::vector<Client> parse_config(std::string file);
 
 #endif

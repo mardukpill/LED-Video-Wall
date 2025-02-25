@@ -30,19 +30,54 @@ CanvasPos::CanvasPos(uint32_t x,
     x(x), y(y), rot(rot)
 {}
 
+LEDMatrixSpec::LEDMatrixSpec(std::string id,
+                             float power_limit_amps,
+                             uint32_t width,
+                             uint32_t height):
+    id(id),
+    power_limit_amps(power_limit_amps),
+    width(width),
+    height(height),
+    total_leds(width * height)
+{}
+
+std::string LEDMatrixSpec::to_string() {
+    std::stringstream ss;
+    ss << "LEDMatrixSpec[";
+    ss << "id: " << this->id << ", ";
+    ss << "power_limit_amps: " << this->power_limit_amps << ", ";
+    ss << "width: " << this->width << ",";
+    ss << "height: " << this->width << ",";
+    ss << "total_leds: " << this->total_leds << "]";
+    return ss.str();
+}
+
 LEDMatrix::LEDMatrix(std::string id,
-                     std::string spec,
-                     uint64_t num_leds,
+                     LEDMatrixSpec* spec,
                      CanvasPos pos):
     id(id),
     spec(spec),
-    num_leds(num_leds),
     pos(pos)
 {}
 
 std::string LEDMatrix::to_string() {
-    return this->id + ", " + this->spec + ", " + std::to_string(this->num_leds) +
-        ", " + std::to_string(this->pos.x) + ", " + std::to_string(this->pos.x);
+    std::stringstream ss;
+    ss << "LEDMatrix[";
+    ss << "spec: " << this->spec->to_string() << ", ";
+    ss << "pos: " << "(" << this->pos.x << ", " << this->pos.y << ")" << "]";
+    return ss.str();
+}
+
+std::string MatricesConnection::to_string() {
+    std::stringstream ss;
+    ss << "MatricesConnection[";
+    ss << "pin: " << std::to_string(this->pin) << ", ";
+    ss << "matrices: (";
+    for (LEDMatrix* mat : this->matrices) {
+        ss << mat->to_string() << ", ";
+    }
+    ss << ")]";
+    return ss.str();
 }
 
 Client::Client(uint64_t mac_addr,
@@ -57,6 +92,11 @@ std::string Client::to_string() {
     std::stringstream ss;
     ss << "Client[";
     ss << "mac-addr: " << std::hex << this->mac_addr << ", ";
-    ss << "socket: " << std::to_string(this->socket) << "]";
+    ss << "socket: " << std::to_string(this->socket) << ", ";
+    ss << "mat_connections: (";
+    for (MatricesConnection conn : this->mat_connections) {
+        ss << conn.to_string() << ", ";
+    }
+    ss << ")]";
     return ss.str();
 }
