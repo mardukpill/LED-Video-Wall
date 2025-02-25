@@ -8,6 +8,25 @@
 #include <iostream>
 #include <regex>
 
+std::regex rot_regex("^(up|down|left|right)$");
+
+rotation parse_rotation(std::string str) {
+    std::smatch match;
+    std::regex_search(str, match, rot_regex);
+    std::string str_match = match[0].str();
+    if (str_match == "up") {
+        return UP;
+    } else if (str_match == "down") {
+        return DOWN;
+    } else if (str_match == "left") {
+        return LEFT;
+    } else if (str_match == "right") {
+        return RIGHT;
+    }
+
+    //todo error
+}
+
 std::regex mac_48_regex(
     "^[\\dA-F][\\dA-F](([\\dA-F][\\dA-F]){5}|([\\dA-F][\\dA-F]){5})$");
 

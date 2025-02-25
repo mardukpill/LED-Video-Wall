@@ -8,8 +8,6 @@
 
 enum rotation { UP, DOWN, LEFT, RIGHT };
 
-rotation parse_rotation(std::string str);
-
 class CanvasPos {
 public:
     uint32_t x;
