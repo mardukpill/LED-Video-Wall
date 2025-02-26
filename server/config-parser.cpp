@@ -1,5 +1,7 @@
 #include "client.hpp"
 #include <cstdint>
+#include <optional>
+#include <yaml-cpp/exceptions.h>
 #include <yaml-cpp/node/detail/iterator_fwd.h>
 #include <yaml-cpp/yaml.h>
 #include <fstream>
@@ -8,9 +10,13 @@
 #include <iostream>
 #include <regex>
 
+std::string parse_error(std::string error) {
+    return "Parse Error: " + error;
+}
+
 std::regex rot_regex("^(up|down|left|right)$");
 
-rotation parse_rotation(std::string str) {
+std::optional<rotation> parse_rotation(std::string str) {
     std::smatch match;
     std::regex_search(str, match, rot_regex);
     std::string str_match = match[0].str();
@@ -24,11 +30,10 @@ rotation parse_rotation(std::string str) {
         return RIGHT;
     }
 
-    //todo error
+    return std::nullopt;
 }
 
-std::regex mac_48_regex(
-    "^[\\dA-F][\\dA-F](([\\dA-F][\\dA-F]){5}|([\\dA-F][\\dA-F]){5})$");
+std::regex mac_48_regex("^[0-9A-F][0-9A-F](-[0-9A-F][0-9A-F]){5}$");
 
 uint8_t parse_hex(char c) {
     if (c <= '9') {
@@ -38,11 +43,11 @@ uint8_t parse_hex(char c) {
     }
 }
 
-uint64_t parse_mac_addr_48_bit(std::string str) {
+std::optional<uint64_t> parse_mac_addr_48_bit(std::string str) {
     std::smatch match;
     std::regex_search(str, match, mac_48_regex);
     if (match.empty()) {
-        //todo error
+        return std::nullopt;
     }
     uint64_t res = 0;
     for (int i = 0; i < 6; ++i) {
@@ -52,11 +57,10 @@ uint64_t parse_mac_addr_48_bit(std::string str) {
         res <<= 4;
         res += parse_hex(str[offset + 1]);
     }
-
     return res;
 }
 
-std::vector<Client> parse_config(std::string file) {
+std::vector<Client> parse_config_throws(std::string file) {
     YAML::Node config = YAML::LoadFile(file);
 
     YAML::Node ynode_clients = config["clients"];
@@ -87,9 +91,14 @@ std::vector<Client> parse_config(std::string file) {
         
         YAML::Node pos_node = matrix_node["pos"];
         if (pos_node.size() != 2) {
-            //todo error
+            throw YAML::RepresentationException(matrix_node["pos"].Mark(),
+                                                "Position requires two values!");
         }
-        rotation rot = parse_rotation(matrix_node["rot"].as<std::string>());
+        std::optional<rotation> rot_opt = parse_rotation(matrix_node["rot"].as<std::string>());
+        if (!rot_opt.has_value()) {
+            throw YAML::TypedBadConversion<rotation>(matrix_node["rot"].Mark());
+        }
+        rotation rot = rot_opt.value();
         CanvasPos pos = CanvasPos(pos_node[0].as<int>(),
                                   pos_node[1].as<int>(),
                                   rot);
@@ -101,7 +110,11 @@ std::vector<Client> parse_config(std::string file) {
     // Parse Clients
     std::vector<Client> clients;
     for (YAML::const_iterator it=ynode_clients.begin(); it!=ynode_clients.end(); ++it) {
-        uint64_t mac_addr = parse_mac_addr_48_bit(it->first.as<std::string>());
+        std::optional<uint64_t> mac_addr_opt = parse_mac_addr_48_bit(it->first.as<std::string>());
+        if (!mac_addr_opt.has_value()) {
+            throw YAML::RepresentationException(it->first.Mark(), "Invalid MAC Address!");
+        }
+        uint64_t mac_addr = mac_addr_opt.value();
 
         YAML::Node connections_node = it->second["matrix-connections"];
 

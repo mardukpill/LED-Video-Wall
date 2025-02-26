@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <exception>
 #include <iostream>
 #include <iterator>
 #include <string.h>
@@ -10,9 +11,16 @@
 #include "tcp.hpp"
 #include "client.hpp"
 #include "config-parser.hpp"
+#include <vector>
 
 int main() {
-    parse_config("config.yaml");
+    std::vector<Client> clients_exp;
+    try {
+        clients_exp = parse_config_throws("config.yaml");
+    } catch (std::exception& ex) {
+        std::cerr << "Error Parsing config file: " << ex.what() << "\n";
+        exit(-1);
+    }
 }
 
 void start_server() {
