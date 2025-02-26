@@ -21,6 +21,10 @@ int main() {
         std::cerr << "Error Parsing config file: " << ex.what() << "\n";
         exit(-1);
     }
+
+    for (Client c : clients_exp) {
+        std::cout << c.to_string() << "\n";
+    }
 }
 
 void start_server() {
