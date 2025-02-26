@@ -2,8 +2,9 @@
 CXX:=g++
 CPPFLAGS:=
 CXXFLAGS:=-O0 -g -Wall -std=c++17
-LDFLAGS:=-lyaml-cpp
-SOURCES:=main tcp client config-parser
+INCFLAGS = -Iinclude -I/usr/include/opencv4 -I/usr/local/include
+LDFLAGS:=-lyaml-cpp `pkg-config --libs opencv4`
+SOURCES:=main tcp client config-parser canvas/canvas
 OBJ_DIR:=obj
 
 # Variables
@@ -14,10 +15,10 @@ OBJ_FILES:=$(foreach src, $(SOURCES), $(OBJ_DIR)/$(src).o)
 all: led-wall-server
 
 led-wall-server: $(OBJ_FILES)
-	$(CXX) $^ -o $@ $(LDFLAGS)
+	$(CXX) $(INCFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(OBJ_FILES): $(OBJ_DIR)/%.o: %.cpp obj
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCFLAGS) -c $< -o $@
 
 obj:
 	mkdir obj

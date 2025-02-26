@@ -12,6 +12,10 @@
 #include "client.hpp"
 #include "config-parser.hpp"
 #include <vector>
+#include "canvas/canvas.h"
+#include <opencv2/opencv.hpp>
+
+void canvas_debug();
 
 int main() {
     std::vector<Client> clients_exp;
@@ -25,6 +29,35 @@ int main() {
     for (Client c : clients_exp) {
         std::cout << c.to_string() << "\n";
     }
+
+    canvas_debug();
+}
+
+void canvas_debug() {
+    //Create a virtual canvas
+    VirtualCanvas vCanvas(cv::Size(3000, 3000));
+
+    //Create elements (filepath, id, location)
+    Element elem1("canvas/img.jpg", 1, cv::Point(100, 100));
+    Element elem2("canvas/img2.jpg", 2, cv::Point(500, 700));
+
+
+    // Add elements to the canvas
+    vCanvas.addElementToCanvas(elem1);
+    vCanvas.addElementToCanvas(elem2);
+
+
+
+    cv::imshow("Canvas Before Removal", vCanvas.getPixelMatrix());
+    cv::waitKey(0);
+
+    // Remove one element
+    vCanvas.removeElementFromCanvas(elem1);
+
+
+    printf("Show removal\n");
+    cv::imshow("Canvas After Removal", vCanvas.getPixelMatrix());
+    cv::waitKey(0);
 }
 
 void start_server() {
