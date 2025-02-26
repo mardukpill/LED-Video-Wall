@@ -1,17 +1,18 @@
+#include "protocol.hpp"
 #include "set_config.hpp"
-#include "set_leds.hpp"
+#include <Arduino.h>
 
-void set_leds(uint8_t *data, int length) {
+void set_leds(SetLedsMessage *msg) {
   Serial.println("Handling set_leds");
 
-  if (length < 7) {
-    Serial.println("Error: Invalid set_leds packet length");
+  if (!msg) {
+    Serial.println("Error: Invalid set_leds message (null)");
     return;
   }
 
-  uint8_t gpio_pin = data[5];
-
+  uint8_t gpio_pin = msg->gpio_pin;
   int strip_index = -1;
+
   for (int i = 0; i < num_pins; i++) {
     if (connected_pins[i] == gpio_pin) {
       strip_index = i;
@@ -32,15 +33,15 @@ void set_leds(uint8_t *data, int length) {
     return;
   }
 
-  int max_pixels = (length - 7) / num_color_channels;
+  uint32_t data_size = msg->header.size - sizeof(SetLedsMessage);
+  int max_pixels = data_size / num_color_channels;
   num_pixels = min(num_pixels, max_pixels);
 
-  uint8_t *pixel_data = &data[7];
+  uint8_t *pixel_data = msg->pixel_data;
 
   for (int i = 0; i < num_pixels; i++) {
     uint8_t r, g, b;
-
-    if (num_color_channels == 3) { // RGB
+    if (num_color_channels == 3) {
       r = pixel_data[i * 3];
       g = pixel_data[i * 3 + 1];
       b = pixel_data[i * 3 + 2];
@@ -48,7 +49,6 @@ void set_leds(uint8_t *data, int length) {
       Serial.println("Error: Unsupported color channel configuration.");
       return;
     }
-
     leds[i] = CRGB(r, g, b);
   }
 }

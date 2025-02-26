@@ -1,9 +1,10 @@
+#include "protocol.hpp"
 #include "redraw.hpp"
 #include "set_config.hpp"
 #include <Arduino.h>
 #include <FastLED.h>
 
-void redraw() {
+void redraw(RedrawMessage *msg) {
   Serial.println("Handling redraw");
 
   if (!led_buffers || num_pins == 0) {

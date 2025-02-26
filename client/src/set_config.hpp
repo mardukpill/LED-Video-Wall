@@ -1,6 +1,7 @@
 #ifndef SET_CONFIG_H
 #define SET_CONFIG_H
 
+#include "protocol.hpp"
 #include <Arduino.h>
 #include <FastLED.h>
 
@@ -12,7 +13,7 @@ extern uint16_t *num_leds_per_pin;
 extern CRGB **led_buffers;
 extern uint8_t color_order;
 
-void set_config(uint8_t *data, int length);
+void set_config(SetConfigMessage *msg);
 void free_led_buffers();
 
 #endif

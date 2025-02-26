@@ -1,8 +1,13 @@
 #include "network.hpp"
+#include <Arduino.h>
 
-void setup() { connect_wifi(); }
+void setup() {
+  Serial.begin(460800);
+  connect_wifi();
+}
 
 void loop() {
+  delay(1000);
   if (!socket.connected()) {
     Serial.println("Reconnecting to server...");
     send_checkin();

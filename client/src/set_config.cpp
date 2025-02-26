@@ -1,7 +1,8 @@
+#include "protocol.hpp"
 #include "FastLED.h"
 #include "set_config.hpp"
+#include <Arduino.h>
 
-// TODO: fail other ops if the config isn't set and these vars aren't defined
 uint8_t num_color_channels;
 uint8_t bit_depth;
 uint8_t num_pins = 0;
@@ -32,24 +33,19 @@ void free_led_buffers() {
   }
 }
 
-void set_config(uint8_t *data, int length) {
-  Serial.println("Handling set_config");
-
-  // TODO: fix based on protocol updates
-  if (length < 14) {
-    Serial.println("Error: Invalid set_config packet length");
+void set_config(SetConfigMessage *msg) {
+  if (msg == NULL) {
+    Serial.println("Error: Null set_config message pointer");
     return;
   }
 
+  Serial.println("Handling set_config");
+
   free_led_buffers();
 
-  num_color_channels = data[8];
-  uint16_t brightness = (data[9] << 8) | data[10];
-
-  // TODO: add to protocol
-  color_order = data[11];
-
-  num_pins = data[12];
+  num_color_channels = msg->num_color_channels;
+  uint16_t brightness = msg->init_brightness;
+  num_pins = msg->pins_used;
 
   if (num_pins == 0) {
     Serial.println("Error: num_pins cannot be zero");
@@ -66,10 +62,14 @@ void set_config(uint8_t *data, int length) {
     return;
   }
 
-  memcpy(connected_pins, &data[13], num_pins);
-
   for (int i = 0; i < num_pins; i++) {
-    num_leds_per_pin[i] = data[13 + num_pins + i];
+    PinInfo *pinfo = &msg->pin_info[i];
+    connected_pins[i] = pinfo->pin_num;
+    num_leds_per_pin[i] = (uint16_t)pinfo->max_leds;
+
+    if (i == 0) {
+      color_order = pinfo->color_order;
+    }
 
     if (num_leds_per_pin[i] > 0) {
       led_buffers[i] = (CRGB *)malloc(num_leds_per_pin[i] * sizeof(CRGB));
@@ -95,6 +95,9 @@ void set_config(uint8_t *data, int length) {
         break;
       case 5:
         FastLED.addLeds<WS2811, 5, GRB>(led_buffers[i], num_leds_per_pin[i]);
+        break;
+      case 13:
+        FastLED.addLeds<WS2811, 13, GRB>(led_buffers[i], num_leds_per_pin[i]);
         break;
       default:
         Serial.println("Error: Unsupported GPIO pin (not hardcoded yet)");
