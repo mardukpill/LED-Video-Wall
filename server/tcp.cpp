@@ -63,13 +63,7 @@ void LEDTCPServer::wait_all_join(const std::vector<Client> clients) {
         recv(client_socket, check_in_buf, 12, 0);
         CheckInMessage* msg = decode_check_in(check_in_buf);
         uint64_t mac_addr;
-        memcpy(&mac_addr, msg->mac_address, 6);;
-        // 
-        // 
-        // uint16_t op_code;
-        // std::memcpy(&op_code, &check_in_buf + 4, 2);
-        // uint64_t mac_addr;
-        // std::memcpy(&mac_addr, &check_in_buf + 6, 6);
+        memcpy(&mac_addr, msg->mac_address, 6);
 
         // if c is the value representing the end of the iterator, it is not present
         std::cout << "Got message from " << mac_addr << "\n";
@@ -99,13 +93,10 @@ void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, ui
 
     cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height));
 
-    uint32_t msg_size = 7 + ledmat->packed_pixel_array_size;
-    uint8_t op_code = 0;
-    char* send_buf[msg_size];
-    memcpy(send_buf, &msg_size, 4);
-    memcpy(send_buf + 4, &op_code, 1);
-    memcpy(send_buf + 5, &pin, 1);
-    memcpy(send_buf + 6, &bit_depth, 1);
-    memcpy(send_buf + 7, sub_cvmat.data, ledmat->packed_pixel_array_size);
-    send(client_socket, send_buf, msg_size, 0);
+    uint32_t msg_size = ledmat->packed_pixel_array_size;
+    uint32_t out_size;
+    const uint8_t* data = sub_cvmat.data;
+    uint8_t* send_buf = encode_set_leds(pin, bit_depth, data, msg_size, &out_size);
+    send(client_socket, send_buf, out_size, 0);
+    std::cout << "After send\n";
 }

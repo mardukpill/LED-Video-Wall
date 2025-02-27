@@ -19,7 +19,7 @@ void canvas_debug(VirtualCanvas& vCanvas);
 
 int main() {
     //Create a virtual canvas
-    VirtualCanvas vCanvas(cv::Size(3000, 3000));
+    VirtualCanvas vCanvas(cv::Size(40, 40));
 
     std::vector<Client> clients_exp;
     try {
@@ -51,24 +51,6 @@ int main() {
 
 void canvas_debug(VirtualCanvas& vCanvas) {
     //Create elements (filepath, id, location)
-    Element elem1("canvas/img.jpg", 1, cv::Point(100, 100));
-    Element elem2("canvas/img2.jpg", 2, cv::Point(500, 700));
-
-
-    // Add elements to the canvas
+    Element elem1("canvas/img.jpg", 1, cv::Point(0, 0));
     vCanvas.addElementToCanvas(elem1);
-    vCanvas.addElementToCanvas(elem2);
-
-
-
-    //cv::imshow("Canvas Before Removal", vCanvas.getPixelMatrix());
-    //cv::waitKey(0);
-
-    // Remove one element
-    vCanvas.removeElementFromCanvas(elem1);
-
-
-    printf("Show removal\n");
-    //cv::imshow("Canvas After Removal", vCanvas.getPixelMatrix());
-    //cv::waitKey(0);
 }
