@@ -54,6 +54,6 @@ int main() {
 
 void canvas_debug(VirtualCanvas& vCanvas) {
     //Create elements (filepath, id, location)
-    Element elem1("canvas/img5x5_1.jpg", 1, cv::Point(0, 0));
+    Element elem1("canvas/hello-rainbow.png", 1, cv::Point(0, 0));
     vCanvas.addElementToCanvas(elem1);
 }

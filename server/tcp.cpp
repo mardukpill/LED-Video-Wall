@@ -77,7 +77,7 @@ void LEDTCPServer::wait_all_join(const std::vector<Client*> clients) {
             PinInfo info[1] = {(PinInfo){13, COLOR_ORDER_GRB, 8*32, LED_TYPE_WS2811}};
             const PinInfo* inf = info;
             uint32_t out_size;
-            uint8_t* msg = encode_set_config(3, 5, 1, inf, &out_size);
+            uint8_t* msg = encode_set_config(3, 10, 1, inf, &out_size);
             send(client_socket, msg, out_size, 0);
             std::cout << "Sent set_config to " << mac_addr << "\n";
         } else {
@@ -94,33 +94,33 @@ void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, ui
 
     cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height));
 
-    // uint32_t msg_size = 8 + ledmat->packed_pixel_array_size;
-    // uint16_t op_code = 1;
+    uint32_t msg_size = 8 + ledmat->packed_pixel_array_size;
+    uint16_t op_code = 1;
     const uint8_t* data = sub_cvmat.data;
-    // uint8_t send_buf[msg_size];
-    // memcpy(send_buf + 0, &msg_size, 4);
-    // memcpy(send_buf + 4, &op_code, 2);
-    // send_buf[6] = pin;
-    // send_buf[7] = bit_depth;
-    // for (uint32_t i = 0; (i < ledmat->packed_pixel_array_size / 3); ++i) {
-    //     uint32_t a = i * 3;
-    //     if ((i / width) % 2 == 0) {
-    //         send_buf[8 + a] = data[a];
-    //         send_buf[8 + a + 1] = data[a + 1];
-    //         send_buf[8 + a + 2] = data[a + 2];
-    //         std::cout << "a: " << a << " ";
-    //     } else {
-    //         uint32_t irem = i % width;
-    //         uint32_t b = (((width - 1) - irem) + (i - irem)) * 3;
-    //         std::cout << "b: " << b << " ";
-    //         send_buf[8 + a] = data[b];
-    //         send_buf[8 + a + 1] = data[b + 1];
-    //         send_buf[8 + a + 2] = data[b + 2];
-    //     }
-    // }
-    uint32_t msg_size = ledmat->packed_pixel_array_size;
-    uint32_t out_size;
-    uint8_t* send_buf = encode_set_leds(pin, bit_depth, data, msg_size, &out_size);
+    uint8_t send_buf[msg_size];
+    memcpy(send_buf + 0, &msg_size, 4);
+    memcpy(send_buf + 4, &op_code, 2);
+    send_buf[6] = pin;
+    send_buf[7] = bit_depth;
+    for (uint32_t i = 0; (i < ledmat->packed_pixel_array_size / 3); ++i) {
+        uint32_t a = i * 3;
+        if ((i / width) % 2 != 0) {
+            send_buf[8 + a] = data[a];
+            send_buf[8 + a + 1] = data[a + 1];
+            send_buf[8 + a + 2] = data[a + 2];
+            std::cout << "a: " << a << " ";
+        } else {
+            uint32_t irem = i % width;
+            uint32_t b = (((width - 1) - irem) + (i - irem)) * 3;
+            std::cout << "b: " << b << " ";
+            send_buf[8 + a] = data[b];
+            send_buf[8 + a + 1] = data[b + 1];
+            send_buf[8 + a + 2] = data[b + 2];
+        }
+    }
+    // uint32_t msg_size = ledmat->packed_pixel_array_size;
+    // uint32_t out_size;
+    // uint8_t* send_buf = encode_set_leds(pin, bit_depth, data, msg_size, &out_size);
     int sent = send(client_socket, send_buf, msg_size, 0);
     std::cout << "socket: " << client_socket << "\n";
     if (sent == -1) {
