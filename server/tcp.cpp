@@ -59,12 +59,16 @@ void LEDTCPServer::wait_all_join(const std::vector<Client> clients) {
     int accepted_clients = 0;
     while (accepted_clients < clients.size()) {
         int client_socket = accept(this->socket, NULL, NULL);
-        char check_in_buf[32];
-        recv(client_socket, check_in_buf, 12, 0);
-        uint16_t op_code;
-        std::memcpy(&op_code, &check_in_buf + 4, 2);
+        uint8_t check_in_buf[9];
+        CheckInMessage* msg = decode_check_in(check_in_buf);
         uint64_t mac_addr;
-        std::memcpy(&mac_addr, &check_in_buf + 6, 6);
+        memcpy(&mac_addr, msg->mac_address, 6);;
+        // 
+        // recv(client_socket, check_in_buf, 12, 0);
+        // uint16_t op_code;
+        // std::memcpy(&op_code, &check_in_buf + 4, 2);
+        // uint64_t mac_addr;
+        // std::memcpy(&mac_addr, &check_in_buf + 6, 6);
 
         // if c is the value representing the end of the iterator, it is not present
         std::cout << "Got message from " << mac_addr << "\n";
