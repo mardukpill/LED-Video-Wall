@@ -4,7 +4,7 @@ CPPFLAGS:=
 CXXFLAGS:=-O0 -g -Wall -std=c++17
 INCFLAGS = -Iinclude -I/usr/include/opencv4 -I/usr/local/include
 LDFLAGS:=-lyaml-cpp `pkg-config --libs opencv4`
-SOURCES:=main tcp client config-parser canvas/canvas
+SOURCES:=main tcp client config-parser canvas/canvas protocol
 OBJ_DIR:=obj
 
 # Variables

@@ -44,6 +44,7 @@ int main() {
     server.wait_all_join(clients_exp);
 
     for (Client c : clients_exp) {
+        std::cout << "Send set_leds to " << c.mac_addr << "\n";
         c.set_leds_all_matrices(vCanvas.getPixelMatrix());
     }
 }

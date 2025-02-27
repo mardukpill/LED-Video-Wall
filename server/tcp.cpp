@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <map>
+#include "protocol.hpp"
 
 const int MAX_WAITING_CLIENTS = 256;
 
@@ -58,7 +59,7 @@ void LEDTCPServer::wait_all_join(const std::vector<Client> clients) {
     int accepted_clients = 0;
     while (accepted_clients < clients.size()) {
         int client_socket = accept(this->socket, NULL, NULL);
-        char check_in_buf[9];
+        char check_in_buf[32];
         recv(client_socket, check_in_buf, 12, 0);
         uint16_t op_code;
         std::memcpy(&op_code, &check_in_buf + 4, 2);
@@ -66,10 +67,19 @@ void LEDTCPServer::wait_all_join(const std::vector<Client> clients) {
         std::memcpy(&mac_addr, &check_in_buf + 6, 6);
 
         // if c is the value representing the end of the iterator, it is not present
+        std::cout << "Got message from " << mac_addr << "\n";
         if (!(mac_to_client.find(mac_addr) == mac_to_client.end())) {
             accepted_clients++;
+            std::cout << "Accepted client\n";
             Client *c = mac_to_client.at(mac_addr);
             c->socket = client_socket;
+
+            PinInfo info[1] = {(PinInfo){13, 0, 8*32, 0}};
+            const PinInfo* inf = info;
+            uint32_t out_size;
+            uint8_t* msg = encode_set_config(3, 1, 1, inf, &out_size);
+            send(client_socket, msg, out_size, 0);
+            std::cout << "Sent set_config to " << mac_addr << "\n";
         } else {
             close(client_socket);
         }
