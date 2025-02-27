@@ -21,7 +21,7 @@ public:
     int socket;
 
     LEDTCPServer(uint32_t addr, uint16_t port, int socket);
-    void wait_all_join(std::vector<Client> clients);
+    void wait_all_join(std::vector<Client*> clients);
 };
 
 std::optional<LEDTCPServer> create_server(uint32_t addr, uint16_t port);

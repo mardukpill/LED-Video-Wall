@@ -60,7 +60,7 @@ std::optional<uint64_t> parse_mac_addr_48_bit(std::string str) {
     return res;
 }
 
-std::vector<Client> parse_config_throws(std::string file) {
+std::vector<Client*> parse_config_throws(std::string file) {
     YAML::Node config = YAML::LoadFile(file);
 
     YAML::Node ynode_clients = config["clients"];
@@ -75,7 +75,7 @@ std::vector<Client> parse_config_throws(std::string file) {
 
         float power_limit = spec_node["power_limit_amps"].as<float>();
         uint32_t width = spec_node["width-height"][0].as<uint32_t>();
-        uint32_t height = spec_node["width-height"][0].as<uint32_t>();
+        uint32_t height = spec_node["width-height"][1].as<uint32_t>();
 
         matrix_specs[id] = new LEDMatrixSpec(id, power_limit, width, height);
     }
@@ -108,7 +108,7 @@ std::vector<Client> parse_config_throws(std::string file) {
     }
 
     // Parse Clients
-    std::vector<Client> clients;
+    std::vector<Client*> clients;
     for (YAML::const_iterator it=ynode_clients.begin(); it!=ynode_clients.end(); ++it) {
         std::optional<uint64_t> mac_addr_opt = parse_mac_addr_48_bit(it->first.as<std::string>());
         if (!mac_addr_opt.has_value()) {
@@ -133,8 +133,7 @@ std::vector<Client> parse_config_throws(std::string file) {
             mat_connections.push_back(conn);
         }
 
-        Client c(mac_addr, -1, mat_connections);
-        clients.push_back(c);
+        clients.push_back(new Client(mac_addr, -1, mat_connections));
     }
 
     return clients;

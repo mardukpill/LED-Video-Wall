@@ -1,7 +1,7 @@
 matrix-specs:
   "ws2812b:32x8":
     power_limit_amps: 2.5
-    width-height: [32, 8]
+    width-height: [8, 32]
 
 matrices:
   mat1:

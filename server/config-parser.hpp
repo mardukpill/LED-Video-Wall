@@ -5,6 +5,6 @@
 #include <vector>
 #include "client.hpp"
 
-std::vector<Client> parse_config_throws(std::string file);
+std::vector<Client*> parse_config_throws(std::string file);
 
 #endif

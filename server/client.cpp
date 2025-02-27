@@ -33,7 +33,7 @@ std::string LEDMatrixSpec::to_string() {
     ss << "id: " << this->id << ", ";
     ss << "power_limit_amps: " << this->power_limit_amps << ", ";
     ss << "width: " << this->width << ",";
-    ss << "height: " << this->width << ",";
+    ss << "height: " << this->height << ",";
     ss << "total_leds: " << this->total_leds << "]";
     return ss.str();
 }

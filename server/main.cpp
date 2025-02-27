@@ -19,9 +19,9 @@ void canvas_debug(VirtualCanvas& vCanvas);
 
 int main() {
     //Create a virtual canvas
-    VirtualCanvas vCanvas(cv::Size(40, 40));
+    VirtualCanvas vCanvas(cv::Size(8, 32));
 
-    std::vector<Client> clients_exp;
+    std::vector<Client*> clients_exp;
     try {
         clients_exp = parse_config_throws("config.yaml");
     } catch (std::exception& ex) {
@@ -29,8 +29,8 @@ int main() {
         exit(-1);
     }
 
-    for (Client c : clients_exp) {
-        std::cout << c.to_string() << "\n";
+    for (Client* c : clients_exp) {
+        std::cout << c->to_string() << "\n";
     }
 
     canvas_debug(vCanvas);
@@ -43,14 +43,17 @@ int main() {
 
     server.wait_all_join(clients_exp);
 
-    for (Client c : clients_exp) {
-        std::cout << "Send set_leds to " << c.mac_addr << "\n";
-        c.set_leds_all_matrices(vCanvas.getPixelMatrix());
+    while(1) {
+        for (Client* c : clients_exp) {
+            std::cout << "Send set_leds to " << c->mac_addr << "\n";
+            c->set_leds_all_matrices(vCanvas.getPixelMatrix());
+        }
+        sleep(3);
     }
 }
 
 void canvas_debug(VirtualCanvas& vCanvas) {
     //Create elements (filepath, id, location)
-    Element elem1("canvas/img.jpg", 1, cv::Point(0, 0));
+    Element elem1("canvas/img5x5_1.jpg", 1, cv::Point(0, 0));
     vCanvas.addElementToCanvas(elem1);
 }
