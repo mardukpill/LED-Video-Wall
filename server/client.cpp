@@ -1,9 +1,14 @@
 #include "client.hpp"
+#include "tcp.hpp"
 #include <cstdint>
 #include <regex>
 #include <optional>
 #include <string>
 #include <ios>
+
+// todo, make configurable later
+const int NUM_CHANNELS = 3;
+const int BIT_DEPTH = 8;
 
 CanvasPos::CanvasPos(uint32_t x,
                      uint32_t y,
@@ -33,13 +38,11 @@ std::string LEDMatrixSpec::to_string() {
     return ss.str();
 }
 
-LEDMatrix::LEDMatrix(std::string id,
-                     LEDMatrixSpec* spec,
-                     CanvasPos pos):
-    id(id),
-    spec(spec),
-    pos(pos)
-{}
+LEDMatrix::LEDMatrix(std::string id, LEDMatrixSpec *spec, CanvasPos pos)
+    : id(id), spec(spec), pos(pos) {
+    this->packed_pixel_array_size = spec->total_leds * NUM_CHANNELS;
+    this->packed_pixel_array = static_cast<unsigned char*>(malloc(packed_pixel_array_size));
+}
 
 std::string LEDMatrix::to_string() {
     std::stringstream ss;
@@ -80,4 +83,13 @@ std::string Client::to_string() {
     }
     ss << ")]";
     return ss.str();
+}
+
+void Client::set_leds_all_matrices(const cv::Mat &cvmat) {
+    for (MatricesConnection conn : this->mat_connections) {
+        uint8_t pin = conn.pin;
+        for (LEDMatrix* mat : conn.matrices) {
+            tcp_set_leds(this->socket, cvmat, mat, pin, BIT_DEPTH);
+        }
+    }
 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <optional>
+#include <opencv2/opencv.hpp>
 
 enum rotation { UP, DOWN, LEFT, RIGHT };
 
@@ -40,6 +41,8 @@ public:
     std::string id;
     LEDMatrixSpec* spec;
     CanvasPos pos;
+    uint32_t packed_pixel_array_size;
+    unsigned char* packed_pixel_array;
 
     LEDMatrix(std::string id,
               LEDMatrixSpec* spec,
@@ -67,6 +70,8 @@ public:
            std::vector<MatricesConnection> mat_connections);
 
     std::string to_string();
+
+    void set_leds_all_matrices(const cv::Mat &cvmat);
 };
 
 #endif

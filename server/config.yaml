@@ -1,0 +1,16 @@
+matrix-specs:
+  "ws2812b:32x8":
+    power_limit_amps: 2.5
+    width-height: [32, 8]
+
+matrices:
+  mat1:
+    spec: "ws2812b:32x8"
+    pos: [0, 0]
+    rot: up
+
+clients:
+  24-0A-C4-0D-AA-F8:
+    matrix-connections:
+      - pin: 13
+        matrices: [mat1]

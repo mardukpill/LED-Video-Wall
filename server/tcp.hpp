@@ -14,8 +14,6 @@
 #include <vector>
 #include "client.hpp"
 
-int create_server_socket(uint32_t addr, uint16_t port);
-
 class LEDTCPServer {
 public:
     uint32_t addr;
@@ -25,5 +23,9 @@ public:
     LEDTCPServer(uint32_t addr, uint16_t port, int socket);
     void wait_all_join(std::vector<Client> clients);
 };
+
+std::optional<LEDTCPServer> create_server(uint32_t addr, uint16_t port);
+
+void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, uint8_t pin, uint8_t bit_depth);
 
 #endif

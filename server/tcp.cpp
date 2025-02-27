@@ -49,9 +49,9 @@ LEDTCPServer::LEDTCPServer(uint32_t addr, uint16_t port, int socket)
 void LEDTCPServer::wait_all_join(const std::vector<Client> clients) {
     listen(this->socket, MAX_WAITING_CLIENTS);
 
-    std::map<uint64_t, Client> mac_to_client;
+    std::map<uint64_t, Client*> mac_to_client;
     for (Client c : clients) {
-        mac_to_client[c.mac_addr] = c;
+        mac_to_client[c.mac_addr] = &c;
     }
 
     // keeps track of the clients that have the appropriate mac address
@@ -65,10 +65,32 @@ void LEDTCPServer::wait_all_join(const std::vector<Client> clients) {
         uint64_t mac_addr;
         std::memcpy(&mac_addr, &check_in_buf + 6, 6);
 
-        auto c = mac_to_client.find(mac_addr); // c is an iterator
         // if c is the value representing the end of the iterator, it is not present
         if (!(mac_to_client.find(mac_addr) == mac_to_client.end())) {
-            // todo
+            accepted_clients++;
+            Client *c = mac_to_client.at(mac_addr);
+            c->socket = client_socket;
+        } else {
+            close(client_socket);
         }
     }
+}
+
+void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, uint8_t pin, uint8_t bit_depth) {
+    uint32_t width = ledmat->spec->width;
+    uint32_t height = ledmat->spec->height;
+    uint32_t x = ledmat->pos.x;
+    uint32_t y = ledmat->pos.y;
+
+    cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height));
+
+    uint32_t msg_size = 7 + ledmat->packed_pixel_array_size;
+    uint8_t op_code = 0;
+    char* send_buf[msg_size];
+    memcpy(send_buf, &msg_size, 4);
+    memcpy(send_buf + 4, &op_code, 1);
+    memcpy(send_buf + 5, &pin, 1);
+    memcpy(send_buf + 6, &bit_depth, 1);
+    memcpy(send_buf + 7, sub_cvmat.data, ledmat->packed_pixel_array_size);
+    send(client_socket, send_buf, msg_size, 0);
 }
