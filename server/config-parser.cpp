@@ -50,7 +50,7 @@ std::optional<uint64_t> parse_mac_addr_48_bit(std::string str) {
         return std::nullopt;
     }
     uint64_t res = 0;
-    for (int i = 0; i < 6; ++i) {
+    for (int i = 5; i >= 0; --i) {
         int offset = i * 3;
         res <<= 4;
         res += parse_hex(str[offset]);
