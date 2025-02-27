@@ -59,12 +59,13 @@ void LEDTCPServer::wait_all_join(const std::vector<Client> clients) {
     int accepted_clients = 0;
     while (accepted_clients < clients.size()) {
         int client_socket = accept(this->socket, NULL, NULL);
-        uint8_t check_in_buf[9];
+        uint8_t check_in_buf[32];
+        recv(client_socket, check_in_buf, 12, 0);
         CheckInMessage* msg = decode_check_in(check_in_buf);
         uint64_t mac_addr;
         memcpy(&mac_addr, msg->mac_address, 6);;
         // 
-        // recv(client_socket, check_in_buf, 12, 0);
+        // 
         // uint16_t op_code;
         // std::memcpy(&op_code, &check_in_buf + 4, 2);
         // uint64_t mac_addr;
