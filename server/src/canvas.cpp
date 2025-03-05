@@ -38,7 +38,18 @@ void VirtualCanvas::addElementToCanvas(const Element& element) {
     cv::Size elemSize = element.getDimensions();
 
 
-    //Overwite a region of interest with the image - FIX IN FUTURE TO ACCOUNT FOR BOUNDARIES
+    /*
+    Overwite a region of interest with the image. If the image does not fit on the canvas,
+    we derive a new size and crop the element to it before transferring it to the canvas.
+    */
+
+    if(loc.x + elemSize.width > dim.width){
+        elemSize.width = dim.width-loc.x;
+    }else if (loc.y + elemSize.height > dim.height){
+        elemSize.height = dim.height - loc.y;
+    }
+    
+    elemMat = elemMat(cv::Rect(0, 0, elemSize.width, elemSize.height));
     elemMat.copyTo(pixelMatrix(cv::Rect(loc, elemSize)));
 
     //Store the element in the list
