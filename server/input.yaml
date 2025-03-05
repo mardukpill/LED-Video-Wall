@@ -1,0 +1,16 @@
+#Beyond just the id, the id is also a weight to determine which images have layering priority
+#As of right now, we only support "image". -- "text", and "video" is planned.
+
+
+elements:
+  "elem1":
+    id: 2
+    type: "image"
+    filepath: "images/img.jpg"
+    location: [200,0]
+
+  "elem2":
+    id: 1
+    type: "image"
+    filepath: "images/img2.jpg"
+    location: [1600, 100]

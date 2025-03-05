@@ -1,28 +1,46 @@
 # Config File Locations
-SRC_DIRS:=src
-INC_DIRS:=inc
-OBJ_DIR:=obj
-# File Locations Variables
-SRCS:=$(shell find $(SRC_DIR) -name '*.cpp')
-OBJS:=$(foreach src, $(SRCS), $(OBJ_DIR)/$(src).o)
-INC_DIRS:=$(shell find $(INC_DIRS) -type d)
+SRC_DIRS := src
+INC_DIRS := inc
+OBJ_DIR   := obj
 
-# Config Compiler
-CXX:=g++
-CPPFLAGS:=
-CXXFLAGS:=-O0 -g -Wall -std=c++17
-INCFLAGS = $(addprefix -I,$(INC_DIRS)) `pkg-config --cflags opencv4`
-LDFLAGS:=-lyaml-cpp `pkg-config --libs opencv4`
+#Overwrite because I have it installed differently
+OPENCV_INCLUDE_DIR ?= $(OPENCV_DIR)
+YAML_CPP_INCLUDE_DIR ?= $(YAML_DIR)
 
-# Build
+OPENCV_LIB_DIR     ?= /usr/lib/x86_64-linux-gnu
+YAML_CPP_LIB_DIR   ?= /usr/lib/x86_64-linux-gnu
+
+# Source and object files
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp')
+OBJS := $(foreach src, $(SRCS), $(OBJ_DIR)/$(src).o)
+LOCAL_INC_DIRS := $(shell find $(INC_DIRS) -type d)
+
+
+CXX := g++
+CPPFLAGS :=
+CXXFLAGS := -O0 -g -Wall -std=c++17
+
+# Include flags
+INCFLAGS = $(addprefix -I,$(LOCAL_INC_DIRS)) \
+           -I$(OPENCV_INCLUDE_DIR) \
+           -I$(YAML_CPP_INCLUDE_DIR) \
+           `pkg-config --cflags opencv4`
+
+
+LDFLAGS = -L$(YAML_CPP_LIB_DIR) -lyaml-cpp \
+          -L$(OPENCV_LIB_DIR) `pkg-config --libs opencv4`
+
 all: led-wall-server
 
 led-wall-server: $(OBJS)
-	$(CXX) $(INCFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CXX) $^ -o $@ $(INCFLAGS) $(LDFLAGS)
 
-$(OBJ_DIR)/%.cpp.o: %.cpp obj
+$(OBJ_DIR)/%.cpp.o: %.cpp | $(OBJ_DIR)
 	mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCFLAGS) -c $< -o $@
 
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
 clean:
-	rm $(OBJS)
+	rm -rf $(OBJ_DIR)
