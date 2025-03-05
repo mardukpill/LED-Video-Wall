@@ -7,11 +7,10 @@ void setup() {
 }
 
 void loop() {
-  delay(1000);
   if (!socket.connected()) {
     Serial.println("Reconnecting to server...");
     send_checkin();
-    delay(5000); // TODO: unhardcore
+    delay(CHECK_IN_DELAY_MS);
     return;
   }
 
