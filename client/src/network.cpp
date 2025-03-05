@@ -10,21 +10,14 @@
 #include <cstddef>
 #include <esp_wifi.h>
 
-const char wifi_ssid[] = "UB_Devices";
-const char wifi_password[] = "goubbulls";
-const char *server_ip = "yoshi.cse.buffalo.edu"; // yoshi.cse.buffalo.edu
-const uint16_t server_port = 7070;
-
 WiFiClient socket;
 
 void connect_wifi() {
-  char wifi_ssid[] = "UB_Connect";
-  char wifi_password[] = "goubbulls";
-  WiFi.begin(wifi_ssid);
+  WiFi.begin(WIFI_SSID);
 
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500); // TODO: unhardcode delay
+    delay(WIFI_RECONNECT_DELAY_MS);
     Serial.print(".");
   }
   Serial.println("\nConnected to WiFi");
@@ -37,7 +30,7 @@ void connect_wifi() {
 void send_checkin() {
   Serial.println("Sending check-in message");
 
-  if (socket.connect(server_ip, server_port)) {
+  if (socket.connect(SERVER_IP, SERVER_PORT)) {
     uint8_t mac[6];
     esp_wifi_get_mac(WIFI_IF_STA, mac);
 
@@ -91,9 +84,9 @@ void parse_tcp_message() {
     uint16_t op_code = get_message_op_code(buffer);
     Serial.printf("Received OpCode: 0x%04X\n", op_code);
     
-    // TODO: free structs after + reduce all these allocs
     switch (op_code) {
         case OP_SET_LEDS: {
+            // TODO: instead of mallocing buffer for this case, we can directly read incoming bytes into the existing led_buffers
             SetLedsMessage *msg = decode_set_leds(buffer);
             if (msg) {
                 set_leds(msg);
@@ -133,5 +126,5 @@ void parse_tcp_message() {
             break;
     }
     
-    free(buffer);
+    free_message_buffer(buffer);
 }

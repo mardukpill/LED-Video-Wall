@@ -1,1 +1,1 @@
-
+# Binary Network Protocol
