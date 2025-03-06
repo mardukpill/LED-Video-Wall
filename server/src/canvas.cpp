@@ -63,6 +63,7 @@ void VirtualCanvas::addElementToCanvas(const Element& element) {
 
 //Adds an entire map of elements to the canvas. It sorts elements by ID first s.t higher IDs are like weights, their images go on top
 void VirtualCanvas::addElementVecToCanvas(std::vector<Element>& elementsVec){
+    clear();
     
     std::sort(elementsVec.begin(), elementsVec.end(), [](const Element &a, const Element &b) {
         return a.getId() < b.getId();
