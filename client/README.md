@@ -2,12 +2,12 @@
 
 # Installation
 ## Required
-* [`idf.py`](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html)
+* [`idf.py`](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/get-started/index.html#installation) (Install `v5.3.2`, due to dependency lock of the Arduino component)
 
 ## Optional
 * [`idf-eclipse-plugin`](https://github.com/espressif/idf-eclipse-plugin/blob/master/README.md) (Eclipse)
 * [`vscode-esp-idf-extension`](https://github.com/espressif/vscode-esp-idf-extension/blob/master/README.md) (VS Code)
-* ['clangd'](https://clangd.llvm.org/installation) (LSP)
+* [`clangd`](https://clangd.llvm.org/installation) (LSP)
 * [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html) (Formatter)
 * [`esp-flash`](https://github.com/esp-rs/espflash) (Alternative to `esptool.py`)
 
