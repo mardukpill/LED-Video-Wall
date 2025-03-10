@@ -1,36 +1,17 @@
+#include "driver/gpio.h"
+#include "led_strip.h"
 #include "protocol.hpp"
-#include "FastLED.h"
 #include "set_config.hpp"
 #include <Arduino.h>
+#include <map>
 
-uint8_t num_color_channels;
-uint8_t bit_depth;
-uint8_t num_pins = 0;
-uint8_t *connected_pins = nullptr;
-uint16_t *num_leds_per_pin = nullptr;
-CRGB **led_buffers = nullptr;
-uint8_t color_order = GRB;
+std::map<uint8_t, led_strip_handle_t> pin_to_handle;
 
-void free_led_buffers() {
-  if (led_buffers) {
-    for (int i = 0; i < num_pins; i++) {
-      if (led_buffers[i]) {
-        free(led_buffers[i]);
-      }
-    }
-    free(led_buffers);
-    led_buffers = nullptr;
+void clear_led_strips() {
+  for (auto &entry : pin_to_handle) {
+    led_strip_del(entry.second);
   }
-
-  if (connected_pins) {
-    free(connected_pins);
-    connected_pins = nullptr;
-  }
-
-  if (num_leds_per_pin) {
-    free(num_leds_per_pin);
-    num_leds_per_pin = nullptr;
-  }
+  pin_to_handle.clear();
 }
 
 void set_config(SetConfigMessage *msg) {
@@ -41,74 +22,59 @@ void set_config(SetConfigMessage *msg) {
 
   Serial.println("Handling set_config");
 
-  free_led_buffers();
+  clear_led_strips();
 
-  num_color_channels = msg->num_color_channels;
-  uint16_t brightness = msg->init_brightness;
-  num_pins = msg->pins_used;
+  // uint16_t brightness = msg->init_brightness;
+  uint8_t num_pins = msg->pins_used;
 
   if (num_pins == 0) {
     Serial.println("Error: num_pins cannot be zero");
     return;
   }
 
-  connected_pins = (uint8_t *)malloc(num_pins * sizeof(uint8_t));
-  num_leds_per_pin = (uint16_t *)malloc(num_pins * sizeof(uint16_t));
-  led_buffers = (CRGB **)malloc(num_pins * sizeof(CRGB *));
-
-  if (!connected_pins || !num_leds_per_pin || !led_buffers) {
-    Serial.println("Error: Memory allocation failed");
-    free_led_buffers();
-    return;
-  }
-
   for (int i = 0; i < num_pins; i++) {
     PinInfo *pinfo = &msg->pin_info[i];
-    connected_pins[i] = pinfo->pin_num;
-    num_leds_per_pin[i] = (uint16_t)pinfo->max_leds;
+    uint8_t gpio_pin = pinfo->pin_num;
+    uint16_t num_leds = pinfo->max_leds;
 
-    if (i == 0) {
-      color_order = pinfo->color_order;
+    if (num_leds == 0) {
+      Serial.printf("Warning: num_leds is zero for pin %d\n", gpio_pin);
+      continue;
     }
 
-    if (num_leds_per_pin[i] > 0) {
-      led_buffers[i] = (CRGB *)malloc(num_leds_per_pin[i] * sizeof(CRGB));
-      if (!led_buffers[i]) {
-        Serial.println("Error: Failed to allocate LED buffer!");
-        free_led_buffers();
-        return;
-      }
+    led_strip_config_t strip_config = {
+        .strip_gpio_num = gpio_pin,
+        .max_leds = num_leds,
+        // TODO: handle led_type field
+        .led_model = LED_MODEL_WS2812,
+        .color_component_format = LED_STRIP_COLOR_COMPONENT_FMT_GRB,
+        .flags =
+            {
+                .invert_out = false,
+            },
+    };
 
-      // TODO: this is pretty bad
-      switch (connected_pins[i]) {
-      case 1:
-        FastLED.addLeds<WS2811, 1, GRB>(led_buffers[i], num_leds_per_pin[i]);
-        break;
-      case 2:
-        FastLED.addLeds<WS2811, 2, GRB>(led_buffers[i], num_leds_per_pin[i]);
-        break;
-      case 3:
-        FastLED.addLeds<WS2811, 3, GRB>(led_buffers[i], num_leds_per_pin[i]);
-        break;
-      case 4:
-        FastLED.addLeds<WS2811, 4, GRB>(led_buffers[i], num_leds_per_pin[i]);
-        break;
-      case 5:
-        FastLED.addLeds<WS2811, 5, GRB>(led_buffers[i], num_leds_per_pin[i]);
-        break;
-      case 13:
-        FastLED.addLeds<WS2811, 13, GRB>(led_buffers[i], num_leds_per_pin[i]);
-        break;
-      default:
-        Serial.println("Error: Unsupported GPIO pin (not hardcoded yet)");
-        return;
-      }
-    } else {
-      led_buffers[i] = nullptr;
+    // TODO: check if dma is supported
+    led_strip_rmt_config_t rmt_config = {
+        .clk_src = RMT_CLK_SRC_DEFAULT,
+        .resolution_hz = 10 * 1000 * 1000,
+        // TODO: read more rmt + dma vs spi here:
+        // https://components.espressif.com/components/espressif/led_strip/versions/3.0.0
+        .flags = {.with_dma = true},
+    };
+
+    led_strip_handle_t strip;
+    esp_err_t ret =
+        led_strip_new_rmt_device(&strip_config, &rmt_config, &strip);
+    if (ret != ESP_OK) {
+      Serial.printf("Error: Failed to create LED strip for pin %d\n", gpio_pin);
+      clear_led_strips();
+      return;
     }
+
+    led_strip_clear(strip);
+    pin_to_handle[gpio_pin] = strip;
   }
-
-  FastLED.setBrightness(brightness);
 
   Serial.println("Configuration updated.");
 }
