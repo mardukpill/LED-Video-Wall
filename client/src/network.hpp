@@ -3,6 +3,7 @@
 
 #include <WiFi.h>
 
+// TODO: define esp-idf configs
 #define WIFI_SSID "UB_Connect"
 #define WIFI_RECONNECT_DELAY_MS 500
 

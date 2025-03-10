@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 void setup() {
-  Serial.begin(460800);
+  Serial.begin(115200);
   connect_wifi();
 }
 
