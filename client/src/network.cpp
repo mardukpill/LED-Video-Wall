@@ -89,8 +89,6 @@ void parse_tcp_message() {
 
   switch (op_code) {
   case OP_SET_LEDS: {
-    // TODO: instead of mallocing buffer for this case, we can directly read
-    // incoming bytes into the existing led_buffers
     SetLedsMessage *msg = decode_set_leds(buffer);
     if (msg) {
       set_leds(msg);

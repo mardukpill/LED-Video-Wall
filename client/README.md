@@ -9,7 +9,7 @@
 * [`vscode-esp-idf-extension`](https://github.com/espressif/vscode-esp-idf-extension/blob/master/README.md) (VS Code)
 * [`clangd`](https://clangd.llvm.org/installation) (LSP)
 * [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html) (Formatter)
-* [`esp-flash`](https://github.com/esp-rs/espflash) (Alternative to `esptool.py`)
+* [`espflash`](https://github.com/esp-rs/espflash) (Alternative to `esptool.py`)
 
 # Usage
 Before running any commands, be sure to load the environment via:
