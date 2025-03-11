@@ -13,10 +13,16 @@ class CanvasPos {
 public:
     uint32_t x;
     uint32_t y;
+    // width and height for CanvasPos should not be confused with those in LEDMAtrixSpec,
+    // these may be flipped depending on rotation.
+    uint32_t width;
+    uint32_t height;
     rotation rot;
 
     CanvasPos(uint32_t x,
               uint32_t y,
+              uint32_t width,
+              uint32_t height,
               rotation rot);
 };
 

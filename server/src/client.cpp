@@ -12,8 +12,10 @@ const int BIT_DEPTH = 8;
 
 CanvasPos::CanvasPos(uint32_t x,
                      uint32_t y,
+                     uint32_t width,
+                     uint32_t height,
                      rotation rot):
-    x(x), y(y), rot(rot)
+    x(x), y(y), width(width), height(height), rot(rot)
 {}
 
 LEDMatrixSpec::LEDMatrixSpec(std::string id,
