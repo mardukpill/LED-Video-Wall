@@ -16,8 +16,14 @@
 #include "input-parser.hpp"
 #include <opencv2/opencv.hpp>
 
-int main() {
-    //Create a virtual canvas
+int main(int argc, char* argv[]) {
+    std::string inputFilePath;
+    if (argc == 2) {
+        inputFilePath = std::string(argv[1]);
+    } else {
+        std::cerr << "Error, no image input file specified!" << "\n";
+        exit(-1);
+    }
 
     std::pair<std::vector<Client*>, cv::Size> clients_exp;
     try {
@@ -29,6 +35,17 @@ int main() {
 
     std::cout << "Size: " << clients_exp.second << "\n";
     VirtualCanvas vCanvas(clients_exp.second);
+
+    std::vector<Element> elementsVec;
+    try {
+        elementsVec = parseInput(inputFilePath);
+    } catch (std::exception& ex) {
+        std::cerr << "Error Parsing image input file ("
+                  << inputFilePath << "):"
+                  << ex.what() << "\n";
+        exit(-1);
+    }
+    vCanvas.addElementVecToCanvas(elementsVec);
 
     for (Client* c : clients_exp.first) {
         std::cout << c->to_string() << "\n";
@@ -74,37 +91,5 @@ int main() {
         // usleep(250000); // 4 fps
     }
 
-    // std::string inputFilePath = "input.yaml";
-    // VirtualCanvas vCanvas(cv::Size(2000, 2000));
-    // canvas_debug(vCanvas, inputFilePath);
-    // return 0;
-}
-
-void canvas_debug(VirtualCanvas& vCanvas, std::string inputFilePath) {
-
-    std::vector<Element> elementsVec = parseInput(inputFilePath);
-    vCanvas.addElementVecToCanvas(elementsVec);
-
-    cv::imshow("Display Cats", vCanvas.getPixelMatrix());
-    cv::waitKey(0);
-
-
-    /*
-    //Create elements (filepath, id, location)
-    Element elem1("images/img.jpg", 1, cv::Point(0, 0));
-    vCanvas.addElementToCanvas(elem1);
-
-    cv::imshow("Display Cat 1", vCanvas.getPixelMatrix());
-    cv::waitKey(0);
-
-    Element elem2("images/img2.jpg", 1, cv::Point(1700, 69));
-    vCanvas.addElementToCanvas(elem2);
-
-    cv::imshow("Display Cat 2", vCanvas.getPixelMatrix());
-    cv::waitKey(0);
-    
-    
-    */
-
-    
+    return 0;
 }
