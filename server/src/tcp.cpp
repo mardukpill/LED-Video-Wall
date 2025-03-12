@@ -91,8 +91,20 @@ void LEDTCPServer::wait_all_join(const std::vector<Client*> clients) {
             std::cout << "socket: " << client_socket << "\n";
             c->socket = client_socket;
 
-            PinInfo info[1] = {(PinInfo){13, COLOR_ORDER_GRB, 8*32, LED_TYPE_WS2811}};
-            const PinInfo* inf = info;
+            std::vector<PinInfo> pin_info;
+            for (MatricesConnection conn : c->mat_connections) {
+                uint32_t max_leds = 0;
+                for (LEDMatrix* mat : conn.matrices) {
+                    max_leds += mat->spec->width * mat->spec->height;
+                }
+                pin_info.push_back((PinInfo){
+                        conn.pin,
+                        COLOR_ORDER_GRB,
+                        max_leds,
+                        LED_TYPE_WS2811
+                    });
+            }
+            const PinInfo* inf = pin_info.data();
             uint32_t out_size;
             uint8_t* msg = encode_set_config(3, 10, 1, inf, &out_size);
             send(client_socket, msg, out_size, 0);

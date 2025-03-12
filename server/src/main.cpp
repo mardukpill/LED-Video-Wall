@@ -18,9 +18,8 @@
 
 int main() {
     //Create a virtual canvas
-    VirtualCanvas vCanvas(cv::Size(16, 32));
 
-    std::vector<Client*> clients_exp;
+    std::pair<std::vector<Client*>, cv::Size> clients_exp;
     try {
         clients_exp = parse_config_throws("config.yaml");
     } catch (std::exception& ex) {
@@ -28,7 +27,10 @@ int main() {
         exit(-1);
     }
 
-    for (Client* c : clients_exp) {
+    std::cout << "Size: " << clients_exp.second << "\n";
+    VirtualCanvas vCanvas(clients_exp.second);
+
+    for (Client* c : clients_exp.first) {
         std::cout << c->to_string() << "\n";
     }
 
@@ -41,14 +43,14 @@ int main() {
     }
     LEDTCPServer server = server_opt.value();
 
-    server.wait_all_join(clients_exp);
+    server.wait_all_join(clients_exp.first);
 
     int x = 0;
     int y = 0;
     int dx = 1;
     int dy = 1;
     while(1) {
-        for (Client* c : clients_exp) {
+        for (Client* c : clients_exp.first) {
             vCanvas.removeElementFromCanvas(elem1);
             if (x >= 11) {
                 dx = -1;
