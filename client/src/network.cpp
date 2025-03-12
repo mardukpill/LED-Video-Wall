@@ -1,3 +1,4 @@
+#include "wifi_credentials.hpp"
 #include "get_status.hpp"
 #include "network.hpp"
 #include "protocol.hpp"
@@ -8,13 +9,14 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <cstddef>
+#include <cstdint>
 #include <esp_wifi.h>
 
 WiFiClient socket;
 
 // TODO: you might be able to auto set wifi in esp-idf settings
 void connect_wifi() {
-  WiFi.begin(WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -31,21 +33,29 @@ void connect_wifi() {
 void send_checkin() {
   Serial.println("Sending check-in message");
 
-  if (socket.connect(SERVER_IP, SERVER_PORT)) {
-    uint8_t mac[6];
-    esp_wifi_get_mac(WIFI_IF_STA, mac);
-
-    uint32_t msg_size = 0;
-    uint8_t *buffer = encode_check_in(mac, &msg_size);
-    if (buffer) {
-      socket.write(buffer, msg_size);
-      Serial.println("Check-in message sent");
-      free_message_buffer(buffer);
+  for (uint16_t port = SERVER_PORT_START; port <= SERVER_PORT_END; port++) {
+    if (socket.connect(SERVER_IP, port)) {
+      break;
     } else {
-      Serial.println("Failed to encode check-in message");
+      Serial.print("Failed to connect to server port: ");
+      Serial.println(port);
+      if (port == SERVER_PORT_END) {
+        Serial.println("Failed to connect to any server port");
+        return;
+      }
     }
+  }
+  uint8_t mac[6];
+  esp_wifi_get_mac(WIFI_IF_STA, mac);
+
+  uint32_t msg_size = 0;
+  uint8_t *buffer = encode_check_in(mac, &msg_size);
+  if (buffer) {
+    socket.write(buffer, msg_size);
+    Serial.println("Check-in message sent");
+    free_message_buffer(buffer);
   } else {
-    Serial.println("Failed to connect to server");
+    Serial.println("Failed to encode check-in message");
   }
 }
 
