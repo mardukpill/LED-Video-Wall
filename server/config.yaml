@@ -8,9 +8,17 @@ matrices:
     spec: "ws2812b:32x8"
     pos: [0, 0]
     rot: up
+  mat2:
+    spec: "ws2812b:32x8"
+    pos: [8, 0]
+    rot: up
 
 clients:
   24-0A-C4-0D-AA-F8:
     matrix-connections:
       - pin: 13
         matrices: [mat1]
+  24-0A-C4-0D-76-10:
+    matrix-connections:
+      - pin: 13
+        matrices: [mat2]

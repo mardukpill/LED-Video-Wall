@@ -17,7 +17,7 @@
 
 int main() {
     //Create a virtual canvas
-    VirtualCanvas vCanvas(cv::Size(8, 32));
+    VirtualCanvas vCanvas(cv::Size(16, 32));
 
     std::vector<Client*> clients_exp;
     try {
@@ -46,15 +46,16 @@ int main() {
     while(1) {
         for (Client* c : clients_exp) {
             vCanvas.removeElementFromCanvas(elem1);
-            if (pos > 25) {
+            if (pos > 9) {
                 pos = 0;
             } else {
                 pos++;
             }
-            elem1.setLocation(cv::Point(0, pos));
+            elem1.setLocation(cv::Point(pos, 0));
             vCanvas.addElementToCanvas(elem1);
             c->set_leds_all_matrices(vCanvas.getPixelMatrix());
         }
+        sleep(1);
     }
 }
 
