@@ -42,6 +42,24 @@ uint8_t *encode_set_leds(uint8_t gpio_pin, uint8_t bit_depth,
   return buffer;
 }
 
+// Like encode_set_leds, but doesn't copy the pixel data for you; that is, only
+// the fixed size parts of the message are set.
+SetLedsMessage *encode_fixed_set_leds(uint8_t gpio_pin, uint8_t bit_depth,
+                                      uint32_t data_size, uint32_t *out_size) {
+  *out_size = sizeof(SetLedsMessage) + data_size;
+  uint8_t *buffer = allocate_message_buffer(*out_size);
+  if (!buffer)
+    return NULL;
+
+  SetLedsMessage *msg = (SetLedsMessage *)buffer;
+  msg->header.size = *out_size;
+  msg->header.op_code = OP_SET_LEDS;
+  msg->gpio_pin = gpio_pin;
+  msg->bit_depth = bit_depth;
+
+  return msg;
+}
+
 uint8_t *encode_get_status(const char *debug_string, uint32_t *out_size) {
   uint32_t debug_len = debug_string ? strlen(debug_string) + 1 : 0;
   *out_size = sizeof(MessageHeader) + debug_len;

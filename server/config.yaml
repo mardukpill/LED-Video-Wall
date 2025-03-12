@@ -12,7 +12,7 @@ matrices:
     rot: up
   mat2:
     spec: "ws2812b:32x8"
-    pos: [7, 0]
+    pos: [8, 0]
     rot: up
 
 clients:
@@ -20,5 +20,7 @@ clients:
     matrix-connections:
       - pin: 13
         matrices: [mat1]
-      - pin: 14
+  24-0A-C4-0D-76-10:
+    matrix-connections:
+      - pin: 13
         matrices: [mat2]

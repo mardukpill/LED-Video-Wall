@@ -1,19 +1,14 @@
 #ifndef SET_CONFIG_H
 #define SET_CONFIG_H
 
+#include "led_strip.h"
 #include "protocol.hpp"
 #include <Arduino.h>
-#include <FastLED.h>
+#include <map>
 
-extern uint8_t num_color_channels;
-extern uint8_t bit_depth;
-extern uint8_t num_pins;
-extern uint8_t *connected_pins;
-extern uint16_t *num_leds_per_pin;
-extern CRGB **led_buffers;
-extern uint8_t color_order;
+extern std::map<uint8_t, led_strip_handle_t> pin_to_handle;
 
 void set_config(SetConfigMessage *msg);
-void free_led_buffers();
+void clear_led_strips();
 
 #endif

@@ -1,18 +1,20 @@
+#include "led_strip.h"
 #include "protocol.hpp"
 #include "redraw.hpp"
 #include "set_config.hpp"
 #include <Arduino.h>
-#include <FastLED.h>
 
 void redraw(RedrawMessage *msg) {
   Serial.println("Handling redraw");
 
-  if (!led_buffers || num_pins == 0) {
-    Serial.println("Error: No LED buffers configured.");
+  if (pin_to_handle.empty()) {
+    Serial.println("Error: No LED strips configured.");
     return;
   }
 
-  FastLED.show();
+  for (auto &entry : pin_to_handle) {
+    led_strip_refresh(entry.second);
+  }
 
-  Serial.println("LEDs updated across all configured pins.");
+  Serial.println("LEDs refreshed across all configured pins.");
 }
