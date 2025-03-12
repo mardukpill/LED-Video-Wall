@@ -4,6 +4,8 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <vector>
+#include <algorithm>
+
 
 class AbstractCanvas {
 protected:
@@ -53,6 +55,7 @@ class VirtualCanvas : public AbstractCanvas {
         virtual void clear() override;
         
         void addElementToCanvas(const Element& element);
+        void addElementVecToCanvas(std::vector<Element>& elementsVec);
         void removeElementFromCanvas(const Element& element);
         
         int getElementCount() const { return elementCount; }

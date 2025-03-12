@@ -1,4 +1,8 @@
 #include "canvas.h"
+#include <algorithm>
+
+
+
 
 
 
@@ -38,12 +42,36 @@ void VirtualCanvas::addElementToCanvas(const Element& element) {
     cv::Size elemSize = element.getDimensions();
 
 
-    //Overwite a region of interest with the image - FIX IN FUTURE TO ACCOUNT FOR BOUNDARIES
+    /*
+    Overwite a region of interest with the image. If the image does not fit on the canvas,
+    we derive a new size and crop the element to it before transferring it to the canvas.
+    */
+
+    if(loc.x + elemSize.width > dim.width){
+        elemSize.width = dim.width-loc.x;
+    }else if (loc.y + elemSize.height > dim.height){
+        elemSize.height = dim.height - loc.y;
+    }
+    
+    elemMat = elemMat(cv::Rect(0, 0, elemSize.width, elemSize.height));
     elemMat.copyTo(pixelMatrix(cv::Rect(loc, elemSize)));
 
     //Store the element in the list
     elementList.push_back(element);
     elementCount++;
+}
+
+//Adds an entire map of elements to the canvas. It sorts elements by ID first s.t higher IDs are like weights, their images go on top
+void VirtualCanvas::addElementVecToCanvas(std::vector<Element>& elementsVec){
+    clear();
+    
+    std::sort(elementsVec.begin(), elementsVec.end(), [](const Element &a, const Element &b) {
+        return a.getId() < b.getId();
+    });
+
+    for(const auto& element : elementsVec){
+        VirtualCanvas::addElementToCanvas(element);
+    }
 }
 
 void VirtualCanvas::removeElementFromCanvas(const Element& element) {

@@ -13,6 +13,7 @@
 #include "config-parser.hpp"
 #include <vector>
 #include "canvas.h"
+#include "input-parser.hpp"
 #include <opencv2/opencv.hpp>
 
 int main() {
@@ -57,5 +58,38 @@ int main() {
         }
         sleep(1);
     }
+
+    // std::string inputFilePath = "input.yaml";
+    // VirtualCanvas vCanvas(cv::Size(2000, 2000));
+    // canvas_debug(vCanvas, inputFilePath);
+    // return 0;
 }
 
+void canvas_debug(VirtualCanvas& vCanvas, std::string inputFilePath) {
+
+    std::vector<Element> elementsVec = parseInput(inputFilePath);
+    vCanvas.addElementVecToCanvas(elementsVec);
+
+    cv::imshow("Display Cats", vCanvas.getPixelMatrix());
+    cv::waitKey(0);
+
+
+    /*
+    //Create elements (filepath, id, location)
+    Element elem1("images/img.jpg", 1, cv::Point(0, 0));
+    vCanvas.addElementToCanvas(elem1);
+
+    cv::imshow("Display Cat 1", vCanvas.getPixelMatrix());
+    cv::waitKey(0);
+
+    Element elem2("images/img2.jpg", 1, cv::Point(1700, 69));
+    vCanvas.addElementToCanvas(elem2);
+
+    cv::imshow("Display Cat 2", vCanvas.getPixelMatrix());
+    cv::waitKey(0);
+    
+    
+    */
+
+    
+}

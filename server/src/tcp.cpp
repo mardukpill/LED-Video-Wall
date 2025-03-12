@@ -61,7 +61,7 @@ void LEDTCPServer::wait_all_join(const std::vector<Client*> clients) {
     }
 
     // keeps track of the clients that have the appropriate mac address
-    int accepted_clients = 0;
+    size_t accepted_clients = 0;
     while (accepted_clients < clients.size()) {
         int client_socket = accept(this->socket, NULL, NULL);
         uint8_t check_in_buf[32];
