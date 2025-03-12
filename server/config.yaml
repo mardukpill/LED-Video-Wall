@@ -1,3 +1,5 @@
+ignore-bounds-checks: true
+
 matrix-specs:
   "ws2812b:32x8":
     power_limit_amps: 2.5
