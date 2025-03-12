@@ -1,4 +1,4 @@
 # https://developer.espressif.com/blog/espressif-ide-lsp-support/#clangd-configuration
 CompileFlags:
-  CompilationDatabase: build
+  CompilationDatabase: build-clang
   Remove: [-m*, -f*]
