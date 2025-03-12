@@ -19,7 +19,9 @@
 
 const int MAX_WAITING_CLIENTS = 256;
 
-std::optional<LEDTCPServer> create_server(uint32_t addr, uint16_t port) {
+std::optional<LEDTCPServer> create_server(uint32_t addr,
+                                          uint16_t start_port,
+                                          uint16_t end_port) {
     struct protoent* protocol_entry = getprotobyname("tcp");
     const int tcp_protocol_num = protocol_entry->p_proto;
     
@@ -32,15 +34,25 @@ std::optional<LEDTCPServer> create_server(uint32_t addr, uint16_t port) {
     int enable = 1;
     setsockopt(server_socket, tcp_protocol_num, SO_REUSEPORT, &enable, sizeof(enable));
 
-    struct sockaddr_in s_addr;
-    s_addr.sin_family = AF_INET;
-    s_addr.sin_port = htons(port);
-    s_addr.sin_addr.s_addr = addr;
+    uint16_t port;
+    for (port = start_port; port <= end_port; port ++) {
+        struct sockaddr_in s_addr;
+        s_addr.sin_family = AF_INET;
+        s_addr.sin_port = htons(port);
+        s_addr.sin_addr.s_addr = addr;
 
-    int res = bind(server_socket, (struct sockaddr *)&s_addr, sizeof(s_addr));
-    if (res == -1) {
-        std::cerr << "Failed bind: " << strerror(errno) << "\n";
-        return std::nullopt;
+        int res = bind(server_socket, (struct sockaddr *)&s_addr, sizeof(s_addr));
+        if (res == -1) {
+            std::cerr << "Failed bind: " << strerror(errno) << "\n";
+            if (port == end_port) {
+                std::cerr << "ERROR: could not bind to any of the ports in the range "
+                          << start_port << " to "
+                          << end_port << "\n";
+                return std::nullopt;
+            }
+        } else {
+            break;
+        }
     }
 
     return LEDTCPServer(addr, port, server_socket);
@@ -103,7 +115,7 @@ void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, ui
         height = width;
         height = temp;
     }
-    cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height));
+    cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height)).clone();
     if (rot == LEFT) {
         cv::rotate(sub_cvmat, sub_cvmat, cv::ROTATE_90_CLOCKWISE);
     } else if (rot == RIGHT) {
