@@ -10,7 +10,9 @@
 # YOSHI_USER=johndoe
 # YOSHI_DESTINATION=/project/johndoe/LED-Video-Wall
 
-YOSHI_CONFIG=config-yoshi-sync.sh
+SCRIPT_DIR=$(dirname "$0")
+
+YOSHI_CONFIG=$SCRIPT_DIR/config-yoshi-sync.sh
 if [ -f $YOSHI_CONFIG ]; then
     source $YOSHI_CONFIG
 else
@@ -23,5 +25,5 @@ rsync \
     -av \
     --exclude */obj \
     --exclude */led-wall-server \
-    ./server ./protocol \
+    $SCRIPT_DIR/server $SCRIPT_DIR/protocol \
     $YOSHI_USER@yoshi.cse.buffalo.edu:$YOSHI_DESTINATION
