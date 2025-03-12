@@ -11,6 +11,8 @@
 #include <vector>
 #include <iostream>
 #include <regex>
+#include <opencv2/opencv.hpp>
+#include <limits>
 
 std::string parse_error(std::string error) {
     return "Parse Error: " + error;
@@ -108,11 +110,15 @@ parse_matrix_specs(YAML::Node ynode_matrix_specs) {
     return matrix_specs;
 }
 
-std::map<std::string, LEDMatrix*>
+std::pair<std::map<std::string, LEDMatrix*>, cv::Size>
 parse_matrices(YAML::Node ynode_matrices,
                std::map<std::string, LEDMatrixSpec*> matrix_specs) {
     std::map<std::string, LEDMatrix*> matrices;
 
+    uint32_t min_x = std::numeric_limits<uint32_t>::max();
+    uint32_t max_x = std::numeric_limits<uint32_t>::min();
+    uint32_t min_y = std::numeric_limits<uint32_t>::max();
+    uint32_t max_y = std::numeric_limits<uint32_t>::min();
     for (YAML::const_iterator it=ynode_matrices.begin(); it!=ynode_matrices.end(); ++it) {
         std::string id = it->first.as<std::string>();
 
@@ -120,7 +126,7 @@ parse_matrices(YAML::Node ynode_matrices,
             std::stringstream ss;
             throw std::logic_error("Multiple matrices named '" + id + "'!");
         }
-        
+
         YAML::Node matrix_node = it->second;
 
         std::string spec_id = yaml_key_present_and_unique(matrix_node, "spec").as<std::string>();
@@ -144,9 +150,16 @@ parse_matrices(YAML::Node ynode_matrices,
             width = height;
             height = temp;
         }
+        uint32_t x = pos_node[0].as<int>();
+        uint32_t y = pos_node[1].as<int>();
+
+        min_x = std::min(min_x, x);
+        max_x = std::max(max_x, x + width);
+        min_y = std::min(min_y, y);
+        max_y = std::max(max_y, y + height);
         
-        CanvasPos pos = CanvasPos(pos_node[0].as<int>(),
-                                  pos_node[1].as<int>(),
+        CanvasPos pos = CanvasPos(x,
+                                  y,
                                   width,
                                   height,
                                   rot);
@@ -154,7 +167,9 @@ parse_matrices(YAML::Node ynode_matrices,
         matrices[id] = mat;
     }
 
-    return matrices;
+    // TODO: normalize positions after min values known?
+
+    return std::make_pair(matrices, cv::Size(max_x, max_y));
 }
 
 bool overlaping_range(uint32_t i, uint32_t iwidth, uint32_t j, uint32_t jwidth) {
@@ -230,7 +245,8 @@ parse_clients(YAML::Node ynode_clients, std::map<std::string, LEDMatrix*> matric
     return clients;
 }
 
-std::vector<Client*> parse_config_throws(std::string file) {
+std::pair<std::vector<Client *>, cv::Size>
+parse_config_throws(std::string file) {
     YAML::Node config = YAML::LoadFile(file);
 
     YAML::Node ynode_clients = yaml_key_present_and_unique(config, "clients");
@@ -244,17 +260,17 @@ std::vector<Client*> parse_config_throws(std::string file) {
     
 
     // Parse Matrices
-    std::map<std::string, LEDMatrix*> matrices =
+    std::pair<std::map<std::string, LEDMatrix*>, cv::Size> matrices =
         parse_matrices(ynode_matrices, matrix_specs);
 
     // Do bounds checks
     if (!(ynode_ignore_bounds_checks && (ynode_ignore_bounds_checks.as<std::string>() == "true"))) {
-        bounds_check_matrices(matrices);
+        bounds_check_matrices(matrices.first);
     }
 
     // Parse Clients
     std::vector<Client*> clients =
-        parse_clients(ynode_clients, matrices);
+        parse_clients(ynode_clients, matrices.first);
 
-    return clients;
+    return std::make_pair(clients, matrices.second);
 }
