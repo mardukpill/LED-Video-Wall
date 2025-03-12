@@ -1,5 +1,5 @@
+#include "led_strip.h"
 #include "protocol.hpp"
-#include "FastLED.h"
 #include <Arduino.h>
 
 void set_brightness(SetBrightnessMessage *msg) {
@@ -16,6 +16,6 @@ void set_brightness(SetBrightnessMessage *msg) {
     brightness = 255;
   }
 
-  FastLED.setBrightness(brightness);
+  // TODO: needs to set the rgb color values
   Serial.printf("Brightness set to: %d\n", brightness);
 }

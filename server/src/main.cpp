@@ -16,14 +16,9 @@
 #include "input-parser.hpp"
 #include <opencv2/opencv.hpp>
 
-void canvas_debug(VirtualCanvas& vCanvas, std::string inputFilePath);
-
 int main() {
-
-
-    /*
-     //Create a virtual canvas
-    VirtualCanvas vCanvas(cv::Size(8, 32));
+    //Create a virtual canvas
+    VirtualCanvas vCanvas(cv::Size(16, 32));
 
     std::vector<Client*> clients_exp;
     try {
@@ -37,7 +32,8 @@ int main() {
         std::cout << c->to_string() << "\n";
     }
 
-    canvas_debug(vCanvas);
+    Element elem1("images/img5x5_1.jpg", 1, cv::Point(0, 0));
+    vCanvas.addElementToCanvas(elem1);
 
     std::optional<LEDTCPServer> server_opt = create_server(INADDR_ANY, 7070);
     if (!server_opt.has_value()) {
@@ -47,21 +43,26 @@ int main() {
 
     server.wait_all_join(clients_exp);
 
+    int pos = 0;
     while(1) {
         for (Client* c : clients_exp) {
-            std::cout << "Send set_leds to " << c->mac_addr << "\n";
+            vCanvas.removeElementFromCanvas(elem1);
+            if (pos > 9) {
+                pos = 0;
+            } else {
+                pos++;
+            }
+            elem1.setLocation(cv::Point(pos, 0));
+            vCanvas.addElementToCanvas(elem1);
             c->set_leds_all_matrices(vCanvas.getPixelMatrix());
         }
-        sleep(3);
+        sleep(1);
     }
-    
-    
-    
-    */
-    std::string inputFilePath = "input.yaml";
-    VirtualCanvas vCanvas(cv::Size(2000, 2000));
-    canvas_debug(vCanvas, inputFilePath);
-    return 0;
+
+    // std::string inputFilePath = "input.yaml";
+    // VirtualCanvas vCanvas(cv::Size(2000, 2000));
+    // canvas_debug(vCanvas, inputFilePath);
+    // return 0;
 }
 
 void canvas_debug(VirtualCanvas& vCanvas, std::string inputFilePath) {

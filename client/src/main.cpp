@@ -2,16 +2,15 @@
 #include <Arduino.h>
 
 void setup() {
-  Serial.begin(460800);
+  Serial.begin(115200);
   connect_wifi();
 }
 
 void loop() {
-  delay(1000);
   if (!socket.connected()) {
     Serial.println("Reconnecting to server...");
     send_checkin();
-    delay(5000); // TODO: unhardcore
+    delay(CHECK_IN_DELAY_MS);
     return;
   }
 

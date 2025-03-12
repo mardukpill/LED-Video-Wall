@@ -1,5 +1,6 @@
 #include "tcp.hpp"
 #include "client.hpp"
+#include <asm-generic/socket.h>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -13,6 +14,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <map>
+#include "opencv2/core.hpp"
 #include "protocol.hpp"
 
 const int MAX_WAITING_CLIENTS = 256;
@@ -26,6 +28,9 @@ std::optional<LEDTCPServer> create_server(uint32_t addr, uint16_t port) {
         std::cerr << "Bad socket!\n";
         return std::nullopt;
     }
+
+    int enable = 1;
+    setsockopt(server_socket, tcp_protocol_num, SO_REUSEPORT, &enable, sizeof(enable));
 
     struct sockaddr_in s_addr;
     s_addr.sin_family = AF_INET;
@@ -91,40 +96,45 @@ void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, ui
     uint32_t height = ledmat->spec->height;
     uint32_t x = ledmat->pos.x;
     uint32_t y = ledmat->pos.y;
-
+    rotation rot = ledmat->pos.rot;
+    // swap width and height if rotated +/-90 degrees
+    if (rot == LEFT || rot == RIGHT) {
+        uint32_t temp = width;
+        height = width;
+        height = temp;
+    }
     cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height));
+    if (rot == LEFT) {
+        cv::rotate(sub_cvmat, sub_cvmat, cv::ROTATE_90_CLOCKWISE);
+    } else if (rot == RIGHT) {
+        cv::rotate(sub_cvmat, sub_cvmat, cv::ROTATE_90_COUNTERCLOCKWISE);
+    } else if (rot == DOWN) {
+        cv::rotate(sub_cvmat, sub_cvmat, cv::ROTATE_180);
+    }
 
-    uint32_t msg_size = 8 + ledmat->packed_pixel_array_size;
-    uint16_t op_code = 1;
+    uint32_t array_size = ledmat->packed_pixel_array_size;
+    uint32_t msg_size;
+    SetLedsMessage* msg_buf = encode_fixed_set_leds(pin, bit_depth, array_size, &msg_size);
+    uint8_t* pixel_buf = &(msg_buf->pixel_data[0]);
     const uint8_t* data = sub_cvmat.data;
-    uint8_t send_buf[msg_size];
-    memcpy(send_buf + 0, &msg_size, 4);
-    memcpy(send_buf + 4, &op_code, 2);
-    send_buf[6] = pin;
-    send_buf[7] = bit_depth;
     for (uint32_t i = 0; (i < ledmat->packed_pixel_array_size / 3); ++i) {
         uint32_t a = i * 3;
         if ((i / width) % 2 != 0) {
-            send_buf[8 + a] = data[a];
-            send_buf[8 + a + 1] = data[a + 1];
-            send_buf[8 + a + 2] = data[a + 2];
-            std::cout << "a: " << a << " ";
+            pixel_buf[a + 2] = data[a] / 20;
+            pixel_buf[a + 1] = data[a + 1] / 20;
+            pixel_buf[a] = data[a + 2] / 20;
         } else {
             uint32_t irem = i % width;
             uint32_t b = (((width - 1) - irem) + (i - irem)) * 3;
-            std::cout << "b: " << b << " ";
-            send_buf[8 + a] = data[b];
-            send_buf[8 + a + 1] = data[b + 1];
-            send_buf[8 + a + 2] = data[b + 2];
+            pixel_buf[a + 2] = data[b] / 20;
+            pixel_buf[a + 1] = data[b + 1] / 20;
+            pixel_buf[a] = data[b + 2] / 20;
         }
     }
     // uint32_t msg_size = ledmat->packed_pixel_array_size;
-    // uint32_t out_size;
-    // uint8_t* send_buf = encode_set_leds(pin, bit_depth, data, msg_size, &out_size);
-    int sent = send(client_socket, send_buf, msg_size, 0);
-    std::cout << "socket: " << client_socket << "\n";
+    int sent = send(client_socket, msg_buf, msg_size, 0);
+    free_message_buffer(msg_buf);
     if (sent == -1) {
         std::cout << "Error sending set_leds: " << strerror(errno) << "\n";
     }
-    std::cout << "After send\n";
 }
