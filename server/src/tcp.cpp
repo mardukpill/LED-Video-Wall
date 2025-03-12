@@ -91,6 +91,7 @@ void LEDTCPServer::wait_all_join(const std::vector<Client*> clients) {
             std::cout << "socket: " << client_socket << "\n";
             c->socket = client_socket;
 
+            uint8_t num_pins = c->mat_connections.size();
             std::vector<PinInfo> pin_info;
             for (MatricesConnection conn : c->mat_connections) {
                 uint32_t max_leds = 0;
@@ -106,7 +107,7 @@ void LEDTCPServer::wait_all_join(const std::vector<Client*> clients) {
             }
             const PinInfo* inf = pin_info.data();
             uint32_t out_size;
-            uint8_t* msg = encode_set_config(3, 10, 1, inf, &out_size);
+            uint8_t* msg = encode_set_config(3, 10, num_pins, inf, &out_size);
             send(client_socket, msg, out_size, 0);
             std::cout << "Sent set_config to " << mac_addr << "\n";
         } else {
@@ -141,18 +142,19 @@ void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, ui
     SetLedsMessage* msg_buf = encode_fixed_set_leds(pin, bit_depth, array_size, &msg_size);
     uint8_t* pixel_buf = &(msg_buf->pixel_data[0]);
     const uint8_t* data = sub_cvmat.data;
+    const int brightness_reduction = 10;
     for (uint32_t i = 0; (i < ledmat->packed_pixel_array_size / 3); ++i) {
         uint32_t a = i * 3;
         if ((i / width) % 2 != 0) {
-            pixel_buf[a + 2] = data[a] / 20;
-            pixel_buf[a + 1] = data[a + 1] / 20;
-            pixel_buf[a] = data[a + 2] / 20;
+            pixel_buf[a + 2] = data[a] / brightness_reduction;
+            pixel_buf[a + 1] = data[a + 1] / brightness_reduction;
+            pixel_buf[a] = data[a + 2] / brightness_reduction;
         } else {
             uint32_t irem = i % width;
             uint32_t b = (((width - 1) - irem) + (i - irem)) * 3;
-            pixel_buf[a + 2] = data[b] / 20;
-            pixel_buf[a + 1] = data[b + 1] / 20;
-            pixel_buf[a] = data[b + 2] / 20;
+            pixel_buf[a + 2] = data[b] / brightness_reduction;
+            pixel_buf[a + 1] = data[b + 1] / brightness_reduction;
+            pixel_buf[a] = data[b + 2] / brightness_reduction;
         }
     }
     // uint32_t msg_size = ledmat->packed_pixel_array_size;
