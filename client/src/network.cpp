@@ -85,6 +85,10 @@ void parse_tcp_message() {
     } else {
       Serial.println("Failed to resize message buffer");
 
+      // When realloc fails, it deallocs the buffer and returns a null pointer,
+      // so we must reset the size to its initial state.
+      global_buffer_size = 0;
+
       // If we fail to realloc the buffer, then we can't read the whole message.
       // If we return from this function and it finds bytes available again, it
       // may start reading in the middle of a message, resulting in undefined
@@ -94,6 +98,7 @@ void parse_tcp_message() {
       // TODO: ideally we'd recognize how many bytes are left in the previous
       // message
       socket.stop();
+
       return;
     }
   }
