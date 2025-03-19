@@ -173,12 +173,7 @@ SetLedsMessage *decode_set_leds(const uint8_t *buffer) {
   if (message_size < sizeof(SetLedsMessage))
     return NULL;
 
-  SetLedsMessage *msg = (SetLedsMessage *)malloc(message_size);
-  if (!msg)
-    return NULL;
-
-  memcpy(msg, buffer, message_size);
-  return msg;
+  return (SetLedsMessage *)buffer;
 }
 
 GetStatusMessage *decode_get_status(const uint8_t *buffer) {
@@ -189,12 +184,7 @@ GetStatusMessage *decode_get_status(const uint8_t *buffer) {
   if (message_size < sizeof(MessageHeader))
     return NULL;
 
-  GetStatusMessage *msg = (GetStatusMessage *)malloc(message_size);
-  if (!msg)
-    return NULL;
-
-  memcpy(msg, buffer, message_size);
-  return msg;
+  return (GetStatusMessage *)buffer;
 }
 
 SetBrightnessMessage *decode_set_brightness(const uint8_t *buffer) {
@@ -205,12 +195,7 @@ SetBrightnessMessage *decode_set_brightness(const uint8_t *buffer) {
   if (message_size < sizeof(SetBrightnessMessage))
     return NULL;
 
-  SetBrightnessMessage *msg = (SetBrightnessMessage *)malloc(message_size);
-  if (!msg)
-    return NULL;
-
-  memcpy(msg, buffer, message_size);
-  return msg;
+  return (SetBrightnessMessage *)buffer;
 }
 
 RedrawMessage *decode_redraw(const uint8_t *buffer) {
@@ -221,12 +206,7 @@ RedrawMessage *decode_redraw(const uint8_t *buffer) {
   if (message_size < sizeof(RedrawMessage))
     return NULL;
 
-  RedrawMessage *msg = (RedrawMessage *)malloc(message_size);
-  if (!msg)
-    return NULL;
-
-  memcpy(msg, buffer, message_size);
-  return msg;
+  return (RedrawMessage *)buffer;
 }
 
 SetConfigMessage *decode_set_config(const uint8_t *buffer) {
@@ -237,12 +217,7 @@ SetConfigMessage *decode_set_config(const uint8_t *buffer) {
   if (message_size < sizeof(SetConfigMessage))
     return NULL;
 
-  SetConfigMessage *msg = (SetConfigMessage *)malloc(message_size);
-  if (!msg)
-    return NULL;
-
-  memcpy(msg, buffer, message_size);
-  return msg;
+  return (SetConfigMessage *)buffer;
 }
 
 CheckInMessage *decode_check_in(const uint8_t *buffer) {
@@ -253,12 +228,7 @@ CheckInMessage *decode_check_in(const uint8_t *buffer) {
   if (message_size < sizeof(CheckInMessage))
     return NULL;
 
-  CheckInMessage *msg = (CheckInMessage *)malloc(message_size);
-  if (!msg)
-    return NULL;
-
-  memcpy(msg, buffer, message_size);
-  return msg;
+  return (CheckInMessage *)buffer;
 }
 
 SendStatusMessage *decode_send_status(const uint8_t *buffer) {
@@ -269,10 +239,5 @@ SendStatusMessage *decode_send_status(const uint8_t *buffer) {
   if (message_size < sizeof(MessageHeader))
     return NULL;
 
-  SendStatusMessage *msg = (SendStatusMessage *)malloc(message_size);
-  if (!msg)
-    return NULL;
-
-  memcpy(msg, buffer, message_size);
-  return msg;
+  return (SendStatusMessage *)buffer;
 }
