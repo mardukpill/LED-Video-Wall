@@ -33,12 +33,20 @@ void connect_wifi() {
 void send_checkin() {
   Serial.println("Sending check-in message");
 
+  // When attempting to connect to the server, there are multiple ports that it
+  // may have connected to. The preprocessor constants SERVER_PORT_START and
+  // SERVER_PORT_END denote the range of ports, start and end included, that the
+  // server may be using. The code below attempts to connect on all the ports in
+  // the range, and simply returns if none of the ports resulted in a successful
+  // connection. If a connection does succeed then the loop ends early and
+  // continues with the rest of the code.
   for (uint16_t port = SERVER_PORT_START; port <= SERVER_PORT_END; port++) {
     if (socket.connect(SERVER_IP, port)) {
       break;
     } else {
-      Serial.print("Failed to connect to server port: ");
-      Serial.println(port);
+      Serial.print("Tried and failed to connect to server port: ");
+      Serial.print(port);
+      Serial.println("; trying a different port.");
       if (port == SERVER_PORT_END) {
         Serial.println("Failed to connect to any server port");
         return;
