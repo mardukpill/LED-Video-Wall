@@ -43,7 +43,7 @@ void connect_wifi() {
 
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
-    delay(WIFI_RECONNECT_DELAY_MS);
+    vTaskDelay(pdMS_TO_TICKS(WIFI_RECONNECT_DELAY_MS));
     Serial.print(".");
   }
   Serial.println("\nConnected to WiFi");
@@ -149,7 +149,7 @@ void parse_tcp_message() {
   uint8_t *buffer_ptr = global_buffer + sizeof(uint32_t);
   while (total < remaining_bytes) {
     int current = socket.read(buffer_ptr + total, remaining_bytes - total);
-    if (current == -1) {
+    if (current <= 0) {
       Serial.println("Socket read failed or disconnected");
       return;
     }
