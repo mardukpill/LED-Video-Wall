@@ -1,4 +1,3 @@
-#include "wifi_credentials.hpp"
 #include "get_status.hpp"
 #include "network.hpp"
 #include "protocol.hpp"
@@ -11,6 +10,27 @@
 #include <cstddef>
 #include <cstdint>
 #include <esp_wifi.h>
+
+
+// There should be a separate header file, "wifi_credentials.hpp", that defines
+// preprocessor constants, WIFI_SSID and WIFI_PASSWORD, that are used by the
+// clients to connect to wifi.
+// !!! THE CREDENTIALS FILE MUST _NOT_ BE ADDDED TO GIT/SOURCE CONTROL !!!
+// Here is an example of what "wifi_credentials.hpp" look like:
+// -----------------------------------------------------------
+// #ifndef CREDENTIALS_HPP
+// #define CREDENTIALS_HPP
+// #define WIFI_SSID "UB_Connect"
+// #define WIFI_PASSWORD ""
+// #endif
+// -----------------------------------------------------------
+#if __has_include("wifi_credentials.hpp")
+#include "wifi_credentials.hpp"
+#else
+#warning "'wifi_credentials.hpp' not specified! Using default credentials."
+#define WIFI_SSID "UB_Connect"
+#define WIFI_PASSWORD ""
+#endif
 
 WiFiClient socket;
 
