@@ -66,9 +66,9 @@ $ espflash monitor
 ```
 
 ## `clangd` Support
-For LSP support with `clangd`, the project needs to be reconfigured with the `clang` compiler. There are a few prerequisites befoer getting started:
+For LSP support with `clangd`, the project needs to be reconfigured with the `clang` compiler. There are a few prerequisites before getting started:
 * [`clangd`](https://clangd.llvm.org/installation) (LSP)
-* `esp-clang` (Compiler)
+* `esp-clang` (Compiler, see below)
 
 To install `esp-clang`, run:
 ```bash
@@ -95,7 +95,7 @@ Make sure the [environment variables are loaded](#Usage).
 ### Issues building or setting things up?
 See if running the command below helps:
 ```bash
-$ idf.py fullclean`
+$ idf.py fullclean
 ```
 
 If there are issues with `clang` support, try removing the `build-clang/` directory:

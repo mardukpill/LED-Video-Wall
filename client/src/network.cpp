@@ -73,15 +73,19 @@ void parse_tcp_message() {
 
   memcpy(buffer, sizeBuffer, sizeof(uint32_t));
 
-  bytesRead = socket.read(buffer + sizeof(uint32_t), remainingBytes);
+  uint32_t total = 0;
+  uint8_t *bufferPtr = buffer + sizeof(uint32_t);
+  while (total < remainingBytes) {
+    int current = socket.read(bufferPtr + total, remainingBytes - total);
+    if (current == -1) {
+      Serial.println("Socket read failed or disconnected");
+      free(buffer);
+      return;
+    }
 
-  Serial.printf("Read %d bytes of %u remaining\n", bytesRead,
-                (unsigned int)remainingBytes);
-
-  if (bytesRead != remainingBytes) {
-    Serial.println("Failed to read complete message");
-    free(buffer);
-    return;
+    total += current;
+    Serial.printf("Read %d bytes, total read: %u/%u bytes\n", current, total,
+                  remainingBytes);
   }
 
   uint16_t op_code = get_message_op_code(buffer);
@@ -128,5 +132,5 @@ void parse_tcp_message() {
     break;
   }
 
-  free_message_buffer(buffer);
+  free(buffer);
 }
