@@ -60,7 +60,7 @@ void set_config(SetConfigMessage *msg) {
         .resolution_hz = 10 * 1000 * 1000,
         // TODO: read more rmt + dma vs spi here:
         // https://components.espressif.com/components/espressif/led_strip/versions/3.0.0
-        .flags = {.with_dma = true},
+        .flags = {.with_dma = false},
     };
 
     led_strip_handle_t strip;

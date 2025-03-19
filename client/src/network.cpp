@@ -8,7 +8,29 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <cstddef>
+#include <cstdint>
 #include <esp_wifi.h>
+
+
+// There should be a separate header file, "wifi_credentials.hpp", that defines
+// preprocessor constants, WIFI_SSID and WIFI_PASSWORD, that are used by the
+// clients to connect to wifi.
+// !!! THE CREDENTIALS FILE MUST _NOT_ BE ADDDED TO GIT/SOURCE CONTROL !!!
+// Here is an example of what "wifi_credentials.hpp" look like:
+// -----------------------------------------------------------
+// #ifndef CREDENTIALS_HPP
+// #define CREDENTIALS_HPP
+// #define WIFI_SSID "UB_Connect"
+// #define WIFI_PASSWORD ""
+// #endif
+// -----------------------------------------------------------
+#if __has_include("wifi_credentials.hpp")
+#include "wifi_credentials.hpp"
+#else
+#warning "'wifi_credentials.hpp' not specified! Using default credentials."
+#define WIFI_SSID "UB_Connect"
+#define WIFI_PASSWORD ""
+#endif
 
 WiFiClient socket;
 
@@ -17,7 +39,7 @@ uint32_t global_buffer_size = 0;
 
 // TODO: we may be able to auto set wifi in esp-idf settings
 void connect_wifi() {
-  WiFi.begin(WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -34,21 +56,37 @@ void connect_wifi() {
 void send_checkin() {
   Serial.println("Sending check-in message");
 
-  if (socket.connect(SERVER_IP, SERVER_PORT)) {
-    uint8_t mac[6];
-    esp_wifi_get_mac(WIFI_IF_STA, mac);
-
-    uint32_t msg_size = 0;
-    uint8_t *buffer = encode_check_in(mac, &msg_size);
-    if (buffer) {
-      socket.write(buffer, msg_size);
-      Serial.println("Check-in message sent");
-      free_message_buffer(buffer);
+  // When attempting to connect to the server, there are multiple ports that it
+  // may have connected to. The preprocessor constants SERVER_PORT_START and
+  // SERVER_PORT_END denote the range of ports, start and end included, that the
+  // server may be using. The code below attempts to connect on all the ports in
+  // the range, and simply returns if none of the ports resulted in a successful
+  // connection. If a connection does succeed then the loop ends early and
+  // continues with the rest of the code.
+  for (uint16_t port = SERVER_PORT_START; port <= SERVER_PORT_END; port++) {
+    if (socket.connect(SERVER_IP, port)) {
+      break;
     } else {
-      Serial.println("Failed to encode check-in message");
+      Serial.print("Tried and failed to connect to server port: ");
+      Serial.print(port);
+      Serial.println("; trying a different port.");
+      if (port == SERVER_PORT_END) {
+        Serial.println("Failed to connect to any server port");
+        return;
+      }
     }
+  }
+  uint8_t mac[6];
+  esp_wifi_get_mac(WIFI_IF_STA, mac);
+
+  uint32_t msg_size = 0;
+  uint8_t *buffer = encode_check_in(mac, &msg_size);
+  if (buffer) {
+    socket.write(buffer, msg_size);
+    Serial.println("Check-in message sent");
+    free_message_buffer(buffer);
   } else {
-    Serial.println("Failed to connect to server");
+    Serial.println("Failed to encode check-in message");
   }
 }
 
