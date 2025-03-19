@@ -19,7 +19,9 @@
 
 const int MAX_WAITING_CLIENTS = 256;
 
-std::optional<LEDTCPServer> create_server(uint32_t addr, uint16_t port) {
+std::optional<LEDTCPServer> create_server(uint32_t addr,
+                                          uint16_t start_port,
+                                          uint16_t end_port) {
     struct protoent* protocol_entry = getprotobyname("tcp");
     const int tcp_protocol_num = protocol_entry->p_proto;
     
@@ -32,15 +34,25 @@ std::optional<LEDTCPServer> create_server(uint32_t addr, uint16_t port) {
     int enable = 1;
     setsockopt(server_socket, tcp_protocol_num, SO_REUSEPORT, &enable, sizeof(enable));
 
-    struct sockaddr_in s_addr;
-    s_addr.sin_family = AF_INET;
-    s_addr.sin_port = htons(port);
-    s_addr.sin_addr.s_addr = addr;
+    uint16_t port;
+    for (port = start_port; port <= end_port; port ++) {
+        struct sockaddr_in s_addr;
+        s_addr.sin_family = AF_INET;
+        s_addr.sin_port = htons(port);
+        s_addr.sin_addr.s_addr = addr;
 
-    int res = bind(server_socket, (struct sockaddr *)&s_addr, sizeof(s_addr));
-    if (res == -1) {
-        std::cerr << "Failed bind: " << strerror(errno) << "\n";
-        return std::nullopt;
+        int res = bind(server_socket, (struct sockaddr *)&s_addr, sizeof(s_addr));
+        if (res == -1) {
+            std::cerr << "Failed bind: " << strerror(errno) << "\n";
+            if (port == end_port) {
+                std::cerr << "ERROR: could not bind to any of the ports in the range "
+                          << start_port << " to "
+                          << end_port << "\n";
+                return std::nullopt;
+            }
+        } else {
+            break;
+        }
     }
 
     return LEDTCPServer(addr, port, server_socket);
@@ -79,10 +91,23 @@ void LEDTCPServer::wait_all_join(const std::vector<Client*> clients) {
             std::cout << "socket: " << client_socket << "\n";
             c->socket = client_socket;
 
-            PinInfo info[1] = {(PinInfo){13, COLOR_ORDER_GRB, 8*32, LED_TYPE_WS2811}};
-            const PinInfo* inf = info;
+            uint8_t num_pins = c->mat_connections.size();
+            std::vector<PinInfo> pin_info;
+            for (MatricesConnection conn : c->mat_connections) {
+                uint32_t max_leds = 0;
+                for (LEDMatrix* mat : conn.matrices) {
+                    max_leds += mat->spec->width * mat->spec->height;
+                }
+                pin_info.push_back((PinInfo){
+                        conn.pin,
+                        COLOR_ORDER_GRB,
+                        max_leds,
+                        LED_TYPE_WS2811
+                    });
+            }
+            const PinInfo* inf = pin_info.data();
             uint32_t out_size;
-            uint8_t* msg = encode_set_config(3, 10, 1, inf, &out_size);
+            uint8_t* msg = encode_set_config(3, 10, num_pins, inf, &out_size);
             send(client_socket, msg, out_size, 0);
             std::cout << "Sent set_config to " << mac_addr << "\n";
         } else {
@@ -103,7 +128,7 @@ void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, ui
         height = width;
         height = temp;
     }
-    cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height));
+    cv::Mat sub_cvmat = cvmat(cv::Rect(x, y, width, height)).clone();
     if (rot == LEFT) {
         cv::rotate(sub_cvmat, sub_cvmat, cv::ROTATE_90_CLOCKWISE);
     } else if (rot == RIGHT) {
@@ -117,18 +142,19 @@ void tcp_set_leds(int client_socket, const cv::Mat &cvmat, LEDMatrix* ledmat, ui
     SetLedsMessage* msg_buf = encode_fixed_set_leds(pin, bit_depth, array_size, &msg_size);
     uint8_t* pixel_buf = &(msg_buf->pixel_data[0]);
     const uint8_t* data = sub_cvmat.data;
+    const int brightness_reduction = 10;
     for (uint32_t i = 0; (i < ledmat->packed_pixel_array_size / 3); ++i) {
         uint32_t a = i * 3;
         if ((i / width) % 2 != 0) {
-            pixel_buf[a + 2] = data[a] / 20;
-            pixel_buf[a + 1] = data[a + 1] / 20;
-            pixel_buf[a] = data[a + 2] / 20;
+            pixel_buf[a + 2] = data[a] / brightness_reduction;
+            pixel_buf[a + 1] = data[a + 1] / brightness_reduction;
+            pixel_buf[a] = data[a + 2] / brightness_reduction;
         } else {
             uint32_t irem = i % width;
             uint32_t b = (((width - 1) - irem) + (i - irem)) * 3;
-            pixel_buf[a + 2] = data[b] / 20;
-            pixel_buf[a + 1] = data[b + 1] / 20;
-            pixel_buf[a] = data[b + 2] / 20;
+            pixel_buf[a + 2] = data[b] / brightness_reduction;
+            pixel_buf[a + 1] = data[b + 1] / brightness_reduction;
+            pixel_buf[a] = data[b + 2] / brightness_reduction;
         }
     }
     // uint32_t msg_size = ledmat->packed_pixel_array_size;
