@@ -54,8 +54,8 @@ std::vector<Element> parseInput(const std::string inputFile) {
                 // check for necessary values
                 if (!value["content"] || !value["font_path"] || !value["location"] || !value["color"] || !value["size"]) 
                 {
-                    std::cerr << "Missing required values for element: " << key << std::endl;
-                    abort();
+                  std::cerr << "Missing required values for element: " << key << std::endl;
+                  abort();
                 }
                 std::string filepath = value["font_path"].as<std::string>();
                 std::string content = value["content"].as<std::string>();
@@ -69,12 +69,17 @@ std::vector<Element> parseInput(const std::string inputFile) {
                 // convert location from same format to cv::Point as used by renderTextToElement
                 std::vector<int> locVec = value["location"].as<std::vector<int>>();
                 if ((locVec.size() != 2) || (locVec.at(0) < 0) || (locVec.at(1) < 0)) {
-                    std::cerr << "Location for element " << key << " malformed." << std::endl;
-                    abort();
+                  std::cerr << "Location for element " << key << " malformed." << std::endl;
+                  abort();
                 }
                 cv::Point posPoint(locVec.at(0), locVec.at(1));
                 
                 Element newElement = renderTextToElement(content, filepath, fontSize, fontColor, id, posPoint); 
+                // TODO: implement error check
+                if (false) {
+                  std::cerr << "Error parsing config: text failed to render, is the TTF file correct?" << std::endl;
+                  abort();
+                }
                 elementsVec.push_back(newElement);
             }
             else {
@@ -92,7 +97,8 @@ std::vector<Element> parseInput(const std::string inputFile) {
  
 cv::Scalar hexColorToScalar(const std::string &hexColor) {
   if (hexColor.length() != 7 || hexColor[0] != '#') {
-    // invalid, we'll just return black.
+    // invalid, we'll just return black and warn (thanks nick).
+    std::cerr << "Error parsing config: Hex color \"" << hexColor << "\" invalid." << std::endl;
     return cv::Scalar(0, 0, 0);
   }
 
